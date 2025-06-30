@@ -31,12 +31,12 @@ parser.add_argument("--h", type=float, default=1, help="hyperparameter for gauss
 parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
-parser.add_argument("--T", default=10.0, type=float)
+parser.add_argument("--T", default=1.0, type=float)
 args = parser.parse_args()
 
 
 test_ds_list = []
-for _data_name in ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir"]:
+for _data_name in ['CVC-300']:
     data_path = './data/TestDataset/{}/'.format(_data_name)
     save_path = './results/PraNet/{}/'.format(_data_name)
 
@@ -79,6 +79,10 @@ for i in range(args.num_run):
             upsample = nn.Upsample(size=(h, w), mode='bilinear')
             res = upsample(res)
             res = (res / args.T).sigmoid()
+
+            min_values = torch.min(res, dim=-1, keepdim=True).values
+            max_values = torch.max(res, dim=-1, keepdim=True).values
+            res = (res - min_values) / (max_values - min_values + 1e-6)
 
             cal_res = torch.cat((cal_res, res), dim=0)
             cal_gt = torch.cat((cal_gt, gt), dim=0)
