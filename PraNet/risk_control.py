@@ -31,6 +31,7 @@ parser.add_argument("--h", type=float, default=1, help="hyperparameter for gauss
 parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
+parser.add_argument("--T", default=10.0, type=float)
 args = parser.parse_args()
 
 
@@ -77,7 +78,7 @@ for i in range(args.num_run):
             # Process prediction
             upsample = nn.Upsample(size=(h, w), mode='bilinear')
             res = upsample(res)
-            res = (res).sigmoid()
+            res = (res / args.T).sigmoid()
 
             cal_res = torch.cat((cal_res, res), dim=0)
             cal_gt = torch.cat((cal_gt, gt), dim=0)
