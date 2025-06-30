@@ -61,8 +61,8 @@ result_dict_list = []
 all_fdr_tensor = torch.tensor([], device="cuda")
 for i in range(args.num_run):
     cal_dataset, test_dataset = random_split(cal_test_dataset,[cal_length, len(cal_test_dataset) - cal_length])
-    cal_loader = DataLoader(dataset=cal_dataset, batch_size=args.batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+    cal_loader = DataLoader(dataset=cal_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     B = 1
 
     with torch.no_grad():
