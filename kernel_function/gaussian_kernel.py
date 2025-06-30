@@ -23,7 +23,10 @@ class GaussianKernel(BaseKernelFunction):
 
         # cal_distance shape: [batch_size, calibration_set_size]
         #cal_distance = torch.sum(((cal_feature - sampled_features.unsqueeze(dim=1)) / d) ** 2, dim=-1)
-        cal_distance = self.compute_distance_chunked(cal_feature, sampled_features, d, chunk_size=2)
+        cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
+        for i in range(test_feature.shape[0]):
+            cal_distance[i] = torch.sum(((cal_feature - sampled_features[i]) / d)**2, dim=-1)
+
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
 
         # weight shape: [batch_size, calibration_set_size+1]
@@ -39,16 +42,4 @@ class GaussianKernel(BaseKernelFunction):
             sampled_features[i] = test_feature[i] + torch.randn_like(test_feature[i]) * self.h
         return sampled_features
 
-    def compute_distance_chunked(self, cal_feature, sampled_features, d, chunk_size=2):
-        batch_size, cal_size = cal_feature.size(0), sampled_features.size(0)
-        cal_distance = torch.zeros((batch_size, cal_size),
-                                   device=cal_feature.device,
-                                   dtype=torch.float16)  # Use mixed precision
 
-        for i in range(0, cal_size, chunk_size):
-            chunk = sampled_features[i:i + chunk_size]
-            # Compute difference in chunks
-            diff = (cal_feature.unsqueeze(1) - chunk.unsqueeze(0)) / d
-            cal_distance[:, i:i + chunk_size] = torch.sum(diff ** 2, dim=-1)
-
-        return cal_distance

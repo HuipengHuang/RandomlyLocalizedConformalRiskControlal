@@ -32,6 +32,7 @@ parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 parser.add_argument("--T", default=1.0, type=float)
+parser.add_argument("--num_workers", default=4, type=int)
 parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir", "Kvasirfamily", "polypgen_positive"])
 args = parser.parse_args()
 
@@ -61,8 +62,8 @@ result_dict_list = []
 all_fdr_tensor = torch.tensor([], device="cuda")
 for i in range(args.num_run):
     cal_dataset, test_dataset = random_split(cal_test_dataset,[cal_length, len(cal_test_dataset) - cal_length])
-    cal_loader = DataLoader(dataset=cal_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    cal_loader = DataLoader(dataset=cal_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     B = 1
 
     with torch.no_grad():
@@ -103,5 +104,5 @@ for key, value in result_dict_list[0].items():
     mean_value = np.mean([result_dict_list[j][key] for j in range(len(result_dict_list))])
     print(f"{key}: {value}")
 
-if args.plot:
+if args.plot == "True":
     plot_histgram(all_fdr_tensor, args.alpha, args)
