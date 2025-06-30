@@ -158,11 +158,6 @@ def get_fnr_list(pred_masks, gt_masks):
 
     return fdr_list
 
-def fnr_weight_avg(pred_masks, gt_masks, weight, B=1):
-    TP = torch.sum((pred_masks == 1) & (gt_masks == 1), dim=(2, 3)).float()
-    FP = torch.sum((pred_masks == 1) & (gt_masks == 0), dim=(2, 3)).float()
-    fdr = TP / (TP + FP)
-    return weight[:-1] @ fdr + weight[-1] * B
 
 
 def plot_histgram(fdr_tensor, alpha, args):
@@ -192,8 +187,8 @@ def plot_histgram(fdr_tensor, alpha, args):
 
     if args.output_dir:
         if args.kernel_function != "naive":
-            filename = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_risk_histogram.pdf"
+            filename = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_{args.dataset}_risk_histogram.pdf"
         else:
-            filename = f"{str(alpha).replace('.', '_')}_risk_histogram.pdf"
+            filename = f"{str(alpha).replace('.', '_')}_{args.dataset}_risk_histogram.pdf"
         plt.savefig(f"{args.output_dir}{filename}")
     plt.show()
