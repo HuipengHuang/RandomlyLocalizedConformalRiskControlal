@@ -142,8 +142,7 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
     result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
                    "Var":torch.var(fdr_tensor).item(),
                    "Avg_size": size / fdr_tensor.shape[0]}
-    if args.plot:
-        plot_histgram(fdr_tensor, alpha, args)
+
     return result_dict, fdr_tensor
 
 
