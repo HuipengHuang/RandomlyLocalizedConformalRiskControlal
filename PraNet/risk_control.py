@@ -32,11 +32,11 @@ parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 parser.add_argument("--T", default=1.0, type=float)
-parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir'])
+parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir"])
 args = parser.parse_args()
 
 if args.dataset == "all":
-    ds_name_list = ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir']
+    ds_name_list = ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir"]
 else:
     ds_name_list = [args.dataset]
 test_ds_list = []
