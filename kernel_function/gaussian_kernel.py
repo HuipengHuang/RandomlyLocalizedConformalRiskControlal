@@ -23,7 +23,7 @@ class GaussianKernel(BaseKernelFunction):
 
         # cal_distance shape: [batch_size, calibration_set_size]
         #cal_distance = torch.sum(((cal_feature - sampled_features.unsqueeze(dim=1)) / d) ** 2, dim=-1)
-        cal_distance = self.compute_distance_chunked(cal_feature, sampled_features, d, chunk_size=1000)
+        cal_distance = self.compute_distance_chunked(cal_feature, sampled_features, d, chunk_size=2)
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
 
         # weight shape: [batch_size, calibration_set_size+1]
