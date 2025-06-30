@@ -165,13 +165,13 @@ def plot_histgram(fdr_tensor, alpha, args):
     #plt.xlabel("Risk")
     #plt.ylabel("Density")
     #plt.show()
-    risk_data = fdr_tensor[fdr_tensor<=0.3].cpu().numpy()
+    risk_data = fdr_tensor.cpu().numpy()
 
     # Create figure
     fig, ax = plt.subplots(figsize=(6, 3))
 
     # Plot histogram
-    ax.hist(risk_data, bins=20, alpha=0.7, density=True)
+    ax.hist(risk_data, bins=40, alpha=0.7, density=True)
 
     # Customize plot
     ax.set_xlabel('Risk')
