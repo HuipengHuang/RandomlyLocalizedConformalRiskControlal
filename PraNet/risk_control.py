@@ -9,7 +9,14 @@ from torch.utils.data import DataLoader, ConcatDataset, random_split
 import torch.nn as nn
 import torch
 from utils.dataloader import get_loader, PolypDataset
-from local_function.utils import get_kernel_function
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent  # Goes up to local_crc
+sys.path.append(str(project_root))
+
+from kernel_function.utils import get_kernel_function
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--testsize', type=int, default=352, help='testing size')
