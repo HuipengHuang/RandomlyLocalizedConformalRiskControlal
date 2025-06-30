@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 
 test_ds_list = []
-for _data_name in ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir"]:
+for _data_name in ['CVC-300']:
     data_path = './data/TestDataset/{}/'.format(_data_name)
     save_path = './results/PraNet/{}/'.format(_data_name)
 
