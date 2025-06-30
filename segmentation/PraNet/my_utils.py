@@ -72,7 +72,7 @@ def rlcrc(cal_res, cal_gt, model, test_loader, kernel_function, args ,alpha=0.1,
 
             fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
 
-    result_dict = {"Mean FDR": torch.mean(fdr_tensor).item(),
+    result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
                    "Var": torch.var(fdr_tensor).item(),
                    "Avg_size": size / fdr_tensor.shape[0]}
     if args.plot:
@@ -128,7 +128,7 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
 
         fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
 
-    result_dict = {"Mean FDR": torch.mean(fdr_tensor).item(),
+    result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
                    "Var":torch.var(fdr_tensor).item(),
                    "Avg_size": size / fdr_tensor.shape[0]}
     if args.plot:
