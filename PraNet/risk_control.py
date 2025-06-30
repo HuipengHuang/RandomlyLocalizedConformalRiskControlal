@@ -3,7 +3,7 @@ import os
 import imageio
 import numpy as np
 import shutil
-from my_utils import crc, rlcrc
+from my_utils import crc, rlcrc, plot_histgram
 from lib.PraNet_Res2Net import PraNet
 from torch.utils.data import DataLoader, ConcatDataset, random_split
 import torch.nn as nn
@@ -58,7 +58,7 @@ model.to("cuda")
 cal_test_dataset = ConcatDataset(test_ds_list)
 cal_length = int(len(cal_test_dataset) * args.cal_ratio)
 result_dict_list = []
-
+all_fdr_tensor = torch.tensor([], device="cuda")
 for i in range(args.num_run):
     cal_dataset, test_dataset = random_split(cal_test_dataset,[cal_length, len(cal_test_dataset) - cal_length])
     cal_loader = DataLoader(dataset=cal_dataset, batch_size=args.batch_size, shuffle=False)
@@ -93,12 +93,15 @@ for i in range(args.num_run):
             cal_res = torch.cat((cal_res, res), dim=0)
             cal_gt = torch.cat((cal_gt, gt), dim=0)
         if args.kernel_function == "naive":
-            result_dict = crc(cal_res, cal_gt, model, test_loader, alpha=args.alpha, args=args)
+            result_dict, fdr_tensor = crc(cal_res, cal_gt, model, test_loader, alpha=args.alpha, args=args)
         else:
             kernel_function = get_kernel_function(args)
-            result_dict = rlcrc(cal_res, cal_gt, model, test_loader, kernel_function=kernel_function, args=args)
+            result_dict, fdr_tensor = rlcrc(cal_res, cal_gt, model, test_loader, kernel_function=kernel_function, args=args)
         result_dict_list.append(result_dict)
-
+        all_fdr_tensor = torch.cat((all_fdr_tensor, fdr_tensor), dim=0)
 for key, value in result_dict_list[0].items():
     mean_value = np.mean([result_dict_list[j][key] for j in range(len(result_dict_list))])
     print(f"{key}: {value}")
+
+if args.plot:
+    plot_histgram(all_fdr_tensor, args.alpha, args)
