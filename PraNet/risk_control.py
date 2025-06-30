@@ -32,11 +32,15 @@ parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 parser.add_argument("--T", default=1.0, type=float)
+parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir'])
 args = parser.parse_args()
 
-
+if args.dataset == "all":
+    ds_name_list = ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir']
+else:
+    ds_name_list = [args.dataset]
 test_ds_list = []
-for _data_name in ['CVC-300']:
+for _data_name in ds_name_list:
     data_path = './data/TestDataset/{}/'.format(_data_name)
     save_path = './results/PraNet/{}/'.format(_data_name)
 
