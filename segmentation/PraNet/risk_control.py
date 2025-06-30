@@ -3,12 +3,13 @@ import os
 import imageio
 import numpy as np
 import shutil
-from my_utils import crc
-from segmentation.PraNet.lib.PraNet_Res2Net import PraNet
+from my_utils import crc, rlcrc
+from lib.PraNet_Res2Net import PraNet
 from torch.utils.data import DataLoader, ConcatDataset, random_split
 import torch.nn as nn
 import torch
 from utils.dataloader import get_loader, PolypDataset
+from local_function.utils import get_kernel_function
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--testsize', type=int, default=352, help='testing size')
@@ -16,14 +17,17 @@ parser.add_argument("--batch_size", type=int, default=16)
 parser.add_argument("--cal_ratio", type=float, default=0.5, help="Calibration ratio")
 #parser.add_argument('--pth_path', type=str, default='./snapshots/PraNet-ori.pth')
 parser.add_argument('--pth_path', type=str, default='./snapshots/PraNet_Res2Net/PraNet-19.pth')
-parser.add_argument("--num_run", type=int, default=10, help="Number of runs")
+parser.add_argument("--num_run", type=int, default=1, help="Number of runs")
+parser.add_argument("--kernel_function", type=str, default="naive", help="Kernel function")
+parser.add_argument("--h", type=float, default=1, help="hyperparameter for gaussian kernel")
+parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
+parser.add_argument("--plot", default="False", choices=["True", "False"])
+parser.add_argument("--output_dir", default="./plot_results/")
 args = parser.parse_args()
 
-#if False:
- #   jpg2png("./data/TestDataset/HyperKvasir/images")
-  #  jpg2png("./data/TestDataset/HyperKvasir/masks")
+
 test_ds_list = []
-for _data_name in ['CVC-300', 'CVC-ClinicDB']:
+for _data_name in ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir"]:
     data_path = './data/TestDataset/{}/'.format(_data_name)
     save_path = './results/PraNet/{}/'.format(_data_name)
 
@@ -69,8 +73,11 @@ for i in range(args.num_run):
 
             cal_res = torch.cat((cal_res, res), dim=0)
             cal_gt = torch.cat((cal_gt, gt), dim=0)
-
-        result_dict = crc(cal_res, cal_gt, model, test_loader, alpha=0.1)
+        if args.kernel_function == "naive":
+            result_dict = crc(cal_res, cal_gt, model, test_loader, alpha=args.alpha, args=args)
+        else:
+            kernel_function = get_kernel_function(args)
+            result_dict = rlcrc(cal_res, cal_gt, model, test_loader, kernel_function=kernel_function, args=args)
         result_dict_list.append(result_dict)
         print(f"FDR: {result_dict["Mean FDR"]}")
 for key, value in result_dict_list[0].items():
