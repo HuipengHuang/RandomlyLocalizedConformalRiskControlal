@@ -39,7 +39,7 @@ class GaussianKernel(BaseKernelFunction):
             sampled_features[i] = test_feature[i] + torch.randn_like(test_feature[i]) * self.h
         return sampled_features
 
-    def compute_distance_chunked(self, cal_feature, sampled_features, d, chunk_size=512):
+    def compute_distance_chunked(self, cal_feature, sampled_features, d, chunk_size=2):
         batch_size, cal_size = cal_feature.size(0), sampled_features.size(0)
         cal_distance = torch.zeros((batch_size, cal_size),
                                    device=cal_feature.device,
