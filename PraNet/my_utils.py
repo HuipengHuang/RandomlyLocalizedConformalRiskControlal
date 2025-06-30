@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import seaborn as sns
+from tqdm import tqdm
+
 
 def jpg2png(folder_path):
     # Loop through all files in the folder
@@ -28,7 +30,7 @@ def rlcrc(cal_res, cal_gt, model, test_loader, kernel_function, args ,alpha=0.1,
 
     fdr_tensor = torch.tensor([], device="cuda")
     size = 0
-    for idx, (image, gt, origin_image_path) in enumerate(test_loader):
+    for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
         image = image.cuda()
         gt = gt.cuda()
 
@@ -108,7 +110,7 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
     _lambda = low
     fdr_tensor = torch.tensor([], device="cuda")
     size = 0
-    for idx, (image, gt, origin_image_path) in enumerate(test_loader):
+    for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
         image = image.cuda()
         gt = gt.cuda()
 
@@ -183,5 +185,5 @@ def plot_histgram(fdr_tensor, alpha, args):
             filename = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_risk_histogram.pdf"
         else:
             filename = f"{str(alpha).replace('.', '_')}_risk_histogram.pdf"
-        plt.savefig(f"{args.output_dir}/{filename}")
+        plt.savefig(f"{args.output_dir}{filename}")
     plt.show()

@@ -11,6 +11,7 @@ import torch
 from utils.dataloader import get_loader, PolypDataset
 import sys
 from pathlib import Path
+from tqdm import tqdm
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent  # Goes up to local_crc
@@ -63,7 +64,7 @@ for i in range(args.num_run):
         cal_res = torch.tensor([], device='cuda')
         cal_gt = torch.tensor([], device="cuda")
 
-        for idx, (image, gt, origin_image_path) in enumerate(cal_loader):
+        for idx, (image, gt, origin_image_path) in tqdm(enumerate(cal_loader), desc="Compute calibration feature"):
             image = image.cuda()
             gt = gt.cuda()
 
