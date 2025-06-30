@@ -79,7 +79,7 @@ for i in range(args.num_run):
             kernel_function = get_kernel_function(args)
             result_dict = rlcrc(cal_res, cal_gt, model, test_loader, kernel_function=kernel_function, args=args)
         result_dict_list.append(result_dict)
-        print(f"FDR: {result_dict["MeanFDR"]}")
+
 for key, value in result_dict_list[0].items():
     mean_value = np.mean([result_dict_list[j][key] for j in range(len(result_dict_list))])
     print(f"{key}: {value}")
