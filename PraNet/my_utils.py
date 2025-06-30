@@ -44,9 +44,9 @@ def rlcrc(cal_res, cal_gt, model, test_loader, kernel_function, args ,alpha=0.1,
         res = upsample(res)
         res = (res / args.T).sigmoid().data
 
-        min_values = torch.min(res, dim=-1, keepdim=True).values
-        max_values = torch.max(res, dim=-1, keepdim=True).values
-        res = (res - min_values) / (max_values - min_values + 1e-6)
+        #min_values = torch.min(res, dim=-1, keepdim=True).values
+        #max_values = torch.max(res, dim=-1, keepdim=True).values
+        #res = (res - min_values) / (max_values - min_values + 1e-6)
 
         weight = kernel_function.get_weight(cal_res, res)
 
@@ -129,9 +129,9 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
         res = upsample(res)
         res = (res / args.T).sigmoid().data
 
-        min_values = torch.min(res, dim=-1, keepdim=True).values
-        max_values = torch.max(res, dim=-1, keepdim=True).values
-        res = (res - min_values) / (max_values - min_values + 1e-6)
+        #min_values = torch.min(res, dim=-1, keepdim=True).values
+        #max_values = torch.max(res, dim=-1, keepdim=True).values
+        #res = (res - min_values) / (max_values - min_values + 1e-6)
 
         pred = (res >= 1 - _lambda).to(torch.int)
 

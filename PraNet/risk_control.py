@@ -86,9 +86,9 @@ for i in range(args.num_run):
             res = upsample(res)
             res = (res / args.T).sigmoid()
 
-            min_values = torch.min(res, dim=-1, keepdim=True).values
-            max_values = torch.max(res, dim=-1, keepdim=True).values
-            res = (res - min_values) / (max_values - min_values + 1e-6)
+            #min_values = torch.min(res, dim=-1, keepdim=True).values
+            #max_values = torch.max(res, dim=-1, keepdim=True).values
+            #res = (res - min_values) / (max_values - min_values + 1e-6)
 
             cal_res = torch.cat((cal_res, res), dim=0)
             cal_gt = torch.cat((cal_gt, gt), dim=0)
