@@ -4,7 +4,7 @@ import imageio
 import numpy as np
 import shutil
 from my_utils import jpg2png
-from segmentation.PraNet.lib.PraNet_Res2Net import PraNet
+from PraNet.lib.PraNet_Res2Net import PraNet
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch
