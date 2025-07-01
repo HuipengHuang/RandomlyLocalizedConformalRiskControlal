@@ -62,7 +62,7 @@ class RandomlyLocalizedPredictor:
                 threshold = self.get_weighted_quantile(
                     torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), weight, alpha=self.alpha)
 
-                prediction_set = (batch_score <= threshold).to(torch.int)
+                prediction_set = (batch_score <= threshold.view(-1, 1)).to(torch.int)
 
                 target_prediction_set = prediction_set[torch.arange(batch_size), target]
                 total_coverage += target_prediction_set.sum().item()
