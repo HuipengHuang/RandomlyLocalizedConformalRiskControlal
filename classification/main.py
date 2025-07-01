@@ -18,6 +18,7 @@ parser.add_argument("--dataset", type=str, default="cifar100", choices=["cifar10
                     help="Choose dataset for training.")
 parser.add_argument("--pretrained", default="True")
 parser.add_argument("--load", type=str, default=None, help="Load pretrained weights.")
+parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
 #  Hyperpatameters for Conformal Prediction
 parser.add_argument("--alpha", type=float, default=0.1, help="Error Rate")
 parser.add_argument("--score", type=str, default="thr", choices=["thr", "aps", "raps", "saps", "weight_score"])
