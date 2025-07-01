@@ -5,6 +5,7 @@ import torchvision.models as models
 def build_model(args, num_classes):
     model_type= args.model
     pretrained = args.pretrained
+    print(pretrained)
 
     if model_type == 'resnet18':
         net = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
