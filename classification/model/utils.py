@@ -5,7 +5,6 @@ import torchvision.models as models
 def build_model(args, num_classes):
     model_type= args.model
     pretrained = args.pretrained
-    print(pretrained)
 
     if model_type == 'resnet18':
         net = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
@@ -26,10 +25,11 @@ def build_model(args, num_classes):
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
-    if hasattr(net, "fc"):
-        net.fc = torch.nn.Linear(net.fc.in_features, num_classes)
-    else:
-        net.classifier = torch.nn.Linear(net.classifier.in_features, num_classes)
+    if args.dataset != "imagenet":
+        if hasattr(net, "fc"):
+            net.fc = torch.nn.Linear(net.fc.in_features, num_classes)
+        else:
+            net.classifier = torch.nn.Linear(net.classifier.in_features, num_classes)
 
     if args.load == "True":
         load_model(args, net)
