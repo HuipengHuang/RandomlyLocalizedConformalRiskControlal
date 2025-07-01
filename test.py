@@ -1,4 +1,4 @@
 import torch
-x = torch.ones(size=(5,10))
-y = torch.ones(size=(3,1,10))
-print((x- y).shape)
+x = torch.zeros(size=(5,10))
+y = torch.rand(size=(10,))
+print((x > y).shape)
