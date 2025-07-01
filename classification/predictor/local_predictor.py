@@ -26,7 +26,7 @@ class RandomlyLocalizedPredictor:
         num_classes = self.args.num_classes
         with torch.no_grad():
             cal_feature = torch.tensor([], device="cuda")
-            cal_target = torch.tensor([], device="cuda")
+            cal_target = torch.tensor([], device="cuda", dtype=torch.int)
             for data, target in cal_loader:
                 data = data.to("cuda")
                 target = target.to("cuda")
@@ -34,7 +34,7 @@ class RandomlyLocalizedPredictor:
                 cal_feature = torch.cat((cal_feature, logits), 0)
                 cal_target = torch.cat((cal_target, target), 0)
             cal_prob = torch.softmax(cal_feature, dim=-1)
-            print(cal_prob.shape, cal_target.shape)
+
             cal_score = self.score_function.compute_target_score(cal_prob, cal_target)
 
             total_accuracy = 0
