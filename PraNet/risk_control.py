@@ -50,6 +50,7 @@ with torch.no_grad():
     cal_test_dataset, holdout_dataset = get_dataset(args)
     cal_length = int(len(cal_test_dataset) * args.cal_ratio)
 
+    holdout_feature = None
     if holdout_dataset is not None:
         holdout_dataloader = DataLoader(holdout_dataset, batch_size=args.batch_size, shuffle=False,
                                         num_workers=args.num_workers)
