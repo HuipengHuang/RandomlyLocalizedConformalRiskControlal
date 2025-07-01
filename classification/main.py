@@ -51,7 +51,7 @@ with torch.no_grad():
     net.eval()
     for _ in range(args.num_runs):
         holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
-        holdout_feature = torch.tensor([])
+        holdout_feature = torch.tensor([], device="cuda")
         for data, target in holdout_dataloader:
             data, target = data.cuda(), target.cuda()
             logits = net(data)
