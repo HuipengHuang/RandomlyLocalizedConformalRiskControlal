@@ -202,6 +202,13 @@ def plot_histogram(fdr_tensor, alpha, args):
     # Customize plot
     ax.set_xlabel('Risk')
     ax.set_ylabel('Density')
+    ax.axvline(
+        x=torch.mean(fdr_tensor).item(),
+        c='black',
+        linestyle='--',
+        alpha=0.7,
+        label=f'Empirical: {torch.mean(fdr_tensor).item():.3f}'  # Format to 2 decimal places
+    )
     ax.axvline(x=alpha, c='#999999', linestyle='--', alpha=0.7, label=f'α={alpha}')
     ax.locator_params(axis='x', nbins=10)
     sns.despine(top=True, right=True)
