@@ -11,13 +11,9 @@ from my_utils import plot_histogram, get_dataset
 from lib.PraNet_Res2Net import PraNet
 from torch.utils.data import DataLoader, ConcatDataset, random_split
 import torch
-import sys
-from pathlib import Path
 import torch.nn as nn
 from risk_control.rlcrc import RandomlyLocalizedConformalRiskControl
 from risk_control.crc import ConformalRiskControl
-
-
 from kernel_function.utils import get_kernel_function
 
 parser = argparse.ArgumentParser()
