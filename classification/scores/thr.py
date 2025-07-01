@@ -8,5 +8,5 @@ class THR(BaseScore):
 
     def compute_target_score(self, prob, target):
         """It will return a tensor with dimension 1."""
-        target_prob = prob[torch.arange(len(target)), target]
+        target_prob = prob[torch.arange(target.shape[0]), target]
         return 1 - target_prob
