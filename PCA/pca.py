@@ -36,6 +36,8 @@ class PCA:
         if self.n_components is None:
             self.n_components = min(X.shape[0], X.shape[1])
 
+        return self.V[:, :self.n_components]
+
     def transform(self, X, n_components=None):
         """
         Project data onto the principal components.

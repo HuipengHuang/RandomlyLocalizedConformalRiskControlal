@@ -39,7 +39,7 @@ def build_dataloader(args):
 
     cal_size = int(len(cal_test_dataset) * args.cal_ratio)
     test_size = len(cal_test_dataset) - cal_size
-    holdout_dataset, cal_dataset, test_dataset = random_split(cal_test_dataset, [100, cal_size, test_size - 100])
+    holdout_dataset, cal_dataset, test_dataset = random_split(cal_test_dataset, [1000, cal_size, test_size - 1000])
 
     args.num_classes = num_classes
     holdout_dataloader = DataLoader(holdout_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
