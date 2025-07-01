@@ -60,7 +60,7 @@ class RandomlyLocalizedPredictor:
                 batch_score = self.score_function(prob)
 
                 threshold = self.get_weighted_quantile(
-                    torch.cat(cal_score, torch.tensor([1.0], device="cuda"), dim=0), weight, alpha=self.alpha)
+                    torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), weight, alpha=self.alpha)
 
                 prediction_set = (batch_score <= threshold).to(torch.int)
 
