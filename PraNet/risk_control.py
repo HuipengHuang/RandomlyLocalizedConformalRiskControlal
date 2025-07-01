@@ -7,7 +7,7 @@ sys.path.append(str(project_root))
 
 import argparse
 import numpy as np
-from my_utils import plot_histgram, get_dataset
+from my_utils import plot_histogram, get_dataset
 from lib.PraNet_Res2Net import PraNet
 from torch.utils.data import DataLoader, ConcatDataset, random_split
 import torch
@@ -91,4 +91,4 @@ with torch.no_grad():
         print(f"{key}: {value}")
 
     if args.plot == "True":
-        plot_histgram(all_fdr_tensor, args.alpha, args)
+        plot_histogram(all_fdr_tensor, args.alpha, args)
