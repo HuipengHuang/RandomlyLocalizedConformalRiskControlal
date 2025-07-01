@@ -43,6 +43,7 @@ parser.add_argument(
 parser.add_argument("--holdout_dataset", default=None)
 parser.add_argument("--pca", default=None, choices=["pca", "ppca", "kernel_pca", "sparse_pca", "ppca", "robust_pca"])
 parser.add_argument("--n_components", type=int, default=2)
+parser.add_argument("--efficient", default="True", help="Hyperparameter for PCA")
 args = parser.parse_args()
 
 
