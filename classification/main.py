@@ -8,14 +8,15 @@ from model.utils import build_model
 from dataset.utils import build_dataloader
 from kernel_function.utils import get_kernel_function
 import torch
-from .predictor.local_predictor import RandomlyLocalizedPredictor
-from .predictor.predictor import Predictor
+from predictor.local_predictor import RandomlyLocalizedPredictor
+from predictor.predictor import Predictor
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--model", type=str, default="resnet50", help='Choose neural network architecture.')
 parser.add_argument("--dataset", type=str, default="cifar100", choices=["cifar10", "cifar100", "imagenet"],
                     help="Choose dataset for training.")
+parser.add_argument("--pretrained", default="True")
 parser.add_argument("--load", type=str, default=None, help="Load pretrained weights.")
 #  Hyperpatameters for Conformal Prediction
 parser.add_argument("--alpha", type=float, default=0.1, help="Error Rate")
