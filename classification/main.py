@@ -30,7 +30,7 @@ parser.add_argument("--num_runs", default=1, type=int)
 parser.add_argument("--num_workers", default=4, type=int)
 parser.add_argument("--pca", default=None, choices=["pca", "ppca", "kernel_pca", "sparse_pca", "ppca", "robust_pca"])
 parser.add_argument("--n_components", type=int, default=2)
-
+parser.add_argument("--efficient", default="True", action="PCA Hyperparamter")
 args = parser.parse_args()
 
 num_classes = 1000
