@@ -67,8 +67,8 @@ with torch.no_grad():
         for key, value in result_dict.items():
             print(key, value)
             mean_result_dict[key] += value
+        print()
 
-    print()
     print("Mean Result")
     for key, value in mean_result_dict.items():
         print(key, value / args.num_runs)

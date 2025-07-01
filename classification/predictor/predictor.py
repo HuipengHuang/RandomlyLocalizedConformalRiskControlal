@@ -2,7 +2,7 @@ import numpy as np
 from classification.scores.utils import get_score
 import torch
 import math
-
+from tqdm import tqdm
 
 class Predictor:
     def __init__(self, args, net):
@@ -46,7 +46,7 @@ class Predictor:
         """Must be called after calibration.
         Output a dictionary containing Top1 Accuracy, Coverage and Average Prediction Set Size."""
         threshold = self.calibrate(cal_loader)
-        num_classes = test_loader.dataset.num_classes
+        num_classes = self.args.num_classes
         with torch.no_grad():
             total_accuracy = 0
             total_coverage = 0
@@ -55,7 +55,7 @@ class Predictor:
             class_size = [0 for i in range(num_classes)]
             total_samples = 0
 
-            for data, target in test_loader:
+            for data, target in tqdm(test_loader, desc="Evaluating"):
                 data, target = data.to(self.device), target.to(self.device)
                 batch_size = target.shape[0]
                 total_samples += batch_size
