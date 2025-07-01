@@ -1,7 +1,7 @@
 import numpy as np
 from classification.scores.utils import get_score
 import torch
-import math
+from tqdm import tqdm
 
 class RandomlyLocalizedPredictor:
     def __init__(self, args, net, kernel_function):
@@ -34,7 +34,7 @@ class RandomlyLocalizedPredictor:
                 cal_feature = torch.cat((cal_feature, logits), 0)
                 cal_target = torch.cat((cal_target, target), 0)
             cal_prob = torch.softmax(cal_feature, dim=-1)
-            cal_score = self.score_function(cal_prob, cal_target)
+            cal_score = self.score_function.compute_target_score(cal_prob, cal_target)
 
             total_accuracy = 0
             total_coverage = 0
@@ -43,7 +43,7 @@ class RandomlyLocalizedPredictor:
             class_size = [0 for i in range(num_classes)]
             total_samples = 0
 
-            for data, target in test_loader:
+            for data, target in tqdm(test_loader, desc="Testing"):
                 data, target = data.to(self.device), target.to(self.device)
                 batch_size = target.shape[0]
                 total_samples += batch_size
