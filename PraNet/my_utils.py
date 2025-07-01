@@ -32,7 +32,7 @@ def get_dataset(args):
     elif args.dataset == "Kvasirfamily":
         ds_name_list = ["Kvasir", "HyperKvasir"]
     else:
-        ds_name_list = [args.dataset]
+        ds_name_list = list(args.dataset)
     test_ds_list = []
     for _data_name in ds_name_list:
         data_path = './data/TestDataset/{}/'.format(_data_name)

@@ -30,9 +30,17 @@ parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 parser.add_argument("--T", default=1.0, type=float)
 parser.add_argument("--num_workers", default=4, type=int)
-parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir", "Kvasirfamily", "polypgen_positive"])
-parser.add_argument("--holdout_dataset", default=None)
+#parser.add_argument("--dataset", default="all", choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir", "Kvasirfamily", "polypgen_positive"])
+parser.add_argument(
+    "--dataset",
+    nargs='+',  # Accepts 1 or more values
+    default=["all"],  # Default as list
+    choices=['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB',
+             'Kvasir', "HyperKvasir", "Kvasirfamily", "polypgen_positive", "all"],
+    help="Specify one or more datasets"
+)
 
+parser.add_argument("--holdout_dataset", default=None)
 parser.add_argument("--pca", default=None, choices=["pca", "ppca", "kernel_pca", "sparse_pca", "ppca", "robust_pca"])
 parser.add_argument("--n_components", type=int, default=2)
 args = parser.parse_args()
