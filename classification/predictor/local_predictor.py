@@ -70,15 +70,15 @@ class RandomlyLocalizedPredictor:
                 total_prediction_set_size += prediction_set.sum().item()
 
                 for i in range(prediction_set.shape[0]):
-                    class_coverage[target[i]] += 1
+                    class_coverage[target[i]] += prediction_set[i, target[i]].item()
                     class_size[target[i]] += 1
 
 
             accuracy = total_accuracy / total_samples
             coverage = total_coverage / total_samples
             avg_set_size = total_prediction_set_size / total_samples
-            class_coverage_gap = np.array(class_coverage) / np.array(class_size)
-            class_coverage_gap = np.sum(np.abs(class_coverage_gap - (1 - self.alpha))) / num_classes
+            class_coverage = np.array(class_coverage) / np.array(class_size)
+            class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
             result_dict = {
                 f"Top1Accuracy": accuracy,
                 f"AverageSetSize": avg_set_size,
