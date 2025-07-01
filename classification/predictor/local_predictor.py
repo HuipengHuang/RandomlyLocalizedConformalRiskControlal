@@ -99,7 +99,7 @@ class RandomlyLocalizedPredictor:
             quantiles: Tensor of shape (batch_size,) containing the (1-alpha) weighted quantile per row
         """
         batch_size = weight.shape[0]
-        quantiles = torch.zeros(batch_size)
+        quantiles = torch.zeros(batch_size, device="cuda")
 
         for i in range(batch_size):
             # Combine scores and weights for the current row
