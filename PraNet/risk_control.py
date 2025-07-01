@@ -1,6 +1,6 @@
+#Example CUDA_VISIBLE_DEVICES=1 python risk_control.py --cal_ratio 0.8 --num_runs 10 --kernel_function gaussian --h 1 --batch_size 32 --dataset HyperKvasir --plot True
 import sys
 from pathlib import Path
-
 # Add project root to Python path
 project_root = Path(__file__).parent.parent  # Adjust if needed
 sys.path.append(str(project_root))
