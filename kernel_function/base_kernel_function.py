@@ -9,9 +9,10 @@ class BaseKernelFunction(ABC):
         self.holdout_feature = holdout_feature
         if args.pca:
             self.PCA = get_pca(args)
+            self.V = self.PCA.fit(self.holdout_feature)
         else:
             self.PCA = None
-        self.V = self.PCA.fit(self.holdout_feature)
+            self.V = None
     @abstractmethod
     def get_weight(self, cal_feature, test_feature):
         """
