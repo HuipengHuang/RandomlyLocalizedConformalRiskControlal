@@ -34,6 +34,7 @@ class RandomlyLocalizedPredictor:
                 cal_feature = torch.cat((cal_feature, logits), 0)
                 cal_target = torch.cat((cal_target, target), 0)
             cal_prob = torch.softmax(cal_feature, dim=-1)
+            print(cal_prob.shape, cal_target.shape)
             cal_score = self.score_function.compute_target_score(cal_prob, cal_target)
 
             total_accuracy = 0
