@@ -4,7 +4,10 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import seaborn as sns
+from torch.utils.data import ConcatDataset
 from tqdm import tqdm
+
+from utils.dataloader import PolypDataset
 
 
 def jpg2png(folder_path):
@@ -21,6 +24,39 @@ def jpg2png(folder_path):
                 img.save(png_path)
             except Exception as e:
                 print(f"Failed to convert {filename}: {e}")
+
+def get_dataset(args):
+    if args.dataset == "all":
+        ds_name_list = ['CVC-300', 'CVC-ClinicDB', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'Kvasir', "HyperKvasir",
+                        "polypgen_positive"]
+    elif args.dataset == "Kvasirfamily":
+        ds_name_list = ["Kvasir", "HyperKvasir"]
+    else:
+        ds_name_list = [args.dataset]
+    test_ds_list = []
+    for _data_name in ds_name_list:
+        data_path = './data/TestDataset/{}/'.format(_data_name)
+        save_path = './results/PraNet/{}/'.format(_data_name)
+
+        os.makedirs(save_path, exist_ok=True)
+        image_root = '{}/images/'.format(data_path)
+        gt_root = '{}/masks/'.format(data_path)
+        # test_loader = test_dataset(image_root, gt_root, args.testsize)
+        test_ds_list.append(PolypDataset(image_root, gt_root, args.testsize))
+    cal_test_dataset = ConcatDataset(test_ds_list)
+
+    holdout_dataset = None
+    if args.holdout_dataset is not None:
+        data_path = './data/TestDataset/{}/'.format(args.holdout_dataset)
+        save_path = './results/PraNet/{}/'.format(args.holdout_dataset)
+
+        os.makedirs(save_path, exist_ok=True)
+        image_root = '{}/images/'.format(data_path)
+        gt_root = '{}/masks/'.format(data_path)
+
+        holdout_dataset = PolypDataset(image_root, gt_root, args.testsize)
+
+    return cal_test_dataset, holdout_dataset
 
 def rlcrc(cal_res, cal_gt, model, test_loader, kernel_function, args ,alpha=0.1, B=1,):
     max_iters = 1000
@@ -48,7 +84,7 @@ def rlcrc(cal_res, cal_gt, model, test_loader, kernel_function, args ,alpha=0.1,
         #max_values = torch.max(res, dim=-1, keepdim=True).values
         #res = (res - min_values) / (max_values - min_values + 1e-6)
 
-        weight = kernel_function.get_weight(cal_res, res)
+        weight = kernel_function.get_weight(cal_res.view(cal_res.shape[0], -1), res.view(res.shape[0], -1))
 
         for j in range(bsz):
             low = 0
@@ -118,7 +154,6 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
         image = image.cuda()
         gt = gt.cuda()
 
-        # Forward pass
         res5, res4, res3, res2 = model(image)
         res = res2
         # Get dimensions
@@ -147,10 +182,8 @@ def crc(cal_res, cal_gt, model, test_loader, args, alpha=0.1, B=1):
 
 
 
-
 def get_fnr_list(pred_masks, gt_masks):
     # Input shapes: (B, H, W)
-
     sub = torch.sum( (pred_masks * gt_masks).view(-1 ,352*352), dim=-1)
     fdr_list = 1 - sub / (torch.sum(gt_masks.view(-1, 352*352), dim=-1) + 1e-6)
 
