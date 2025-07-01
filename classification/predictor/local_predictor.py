@@ -23,7 +23,7 @@ class RandomlyLocalizedPredictor:
         """Must be called after calibration.
         Output a dictionary containing Top1 Accuracy, Coverage and Average Prediction Set Size."""
 
-        num_classes = test_loader.dataset.num_classes
+        num_classes = self.args.num_classes
         with torch.no_grad():
             cal_feature = torch.tensor([], device="cuda")
             cal_target = torch.tensor([], device="cuda")
