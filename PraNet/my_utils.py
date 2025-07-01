@@ -190,13 +190,7 @@ def get_fnr_list(pred_masks, gt_masks):
     return fdr_list
 
 
-
-def plot_histgram(fdr_tensor, alpha, args):
-    #fdr_tensor = fdr_tensor[fdr_tensor <= 0.3]
-    #plt.hist(fdr_tensor.cpu().numpy(), bins=50, density=True)
-    #plt.xlabel("Risk")
-    #plt.ylabel("Density")
-    #plt.show()
+def plot_histogram(fdr_tensor, alpha, args):
     risk_data = fdr_tensor.cpu().numpy()
 
     # Create figure
@@ -217,9 +211,24 @@ def plot_histgram(fdr_tensor, alpha, args):
     plt.tight_layout()
 
     if args.output_dir:
+        # Create base filename
         if args.kernel_function != "naive":
-            filename = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_{args.dataset}_risk_histogram.pdf"
+            base_name = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_{args.dataset}_risk_histogram"
         else:
-            filename = f"{str(alpha).replace('.', '_')}_{args.dataset}_risk_histogram.pdf"
-        plt.savefig(f"{args.output_dir}{filename}")
+            base_name = f"{str(alpha).replace('.', '_')}_{args.dataset}_risk_histogram"
+            if args.pca is not None:
+                base_name = str(args.pca) + base_name
+        # Ensure output directory exists
+        os.makedirs(args.output_dir, exist_ok=True)
+
+        # Find available filename
+        counter = 1
+        filename = f"{base_name}.pdf"
+        while os.path.exists(os.path.join(args.output_dir, filename)):
+            filename = f"{base_name}_{counter}.pdf"
+            counter += 1
+
+        # Save the figure
+        plt.savefig(os.path.join(args.output_dir, filename))
+
     plt.show()
