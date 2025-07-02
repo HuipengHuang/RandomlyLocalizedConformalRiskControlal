@@ -19,15 +19,16 @@ class GaussianKernel(BaseKernelFunction):
             else:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
 
+        d = test_feature.shape[1]
         sampled_features = self.sample(test_feature)
 
-        test_distance = torch.sum(((test_feature - sampled_features) / self.h)**2, dim=-1)
+        test_distance = torch.sum(((test_feature - sampled_features) / d / self.h)**2, dim=-1)
 
         # cal_distance shape: [batch_size, calibration_set_size]
         #cal_distance = torch.sum(((cal_feature - sampled_features.unsqueeze(dim=1)) / d) ** 2, dim=-1)
         cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
         for i in range(test_feature.shape[0]):
-            cal_distance[i] = torch.sum(((cal_feature - sampled_features[i]) / self.h)**2, dim=-1)
+            cal_distance[i] = torch.sum(((cal_feature - sampled_features[i]) / d / self.h)**2, dim=-1)
 
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
 
