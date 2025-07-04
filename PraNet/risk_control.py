@@ -24,7 +24,6 @@ parser.add_argument("--cal_ratio", type=float, default=0.5, help="Calibration ra
 parser.add_argument('--pth_path', type=str, default='./snapshots/PraNet_Res2Net/PraNet-19.pth')
 parser.add_argument("--num_runs", type=int, default=1, help="Number of runs")
 parser.add_argument("--kernel_function", type=str, default="naive", help="Kernel function")
-parser.add_argument("--h", type=float, default=None, help="hyperparameter for gaussian kernel")
 parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
 parser.add_argument("--plot", default="False", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
@@ -46,7 +45,9 @@ parser.add_argument("--n_components", type=int, default=2)
 parser.add_argument("--efficient", default="True", help="Hyperparameter for PCA")
 
 parser.add_argument("--vae", default=None)
+parser.add_argument("--latent_dim", type=int, default=None)
 
+parser.add_argument("--h", type=float, default=None, help="hyperparameter for gaussian kernel")
 parser.add_argument("--efficient_calibration_size", default=None, type=int)
 args = parser.parse_args()
 
