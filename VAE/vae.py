@@ -44,10 +44,7 @@ class VariationalAutoEncoder(nn.Module):
             batch_size: Batch size for training
             learning_rate: Learning rate for optimizer
         """
-        # Convert numpy array to tensor if needed
-        if not isinstance(holdout_feature, torch.Tensor):
-            holdout_feature = torch.FloatTensor(holdout_feature)
-
+        print("Training VAE")
         # Create DataLoader
         dataset = TensorDataset(holdout_feature)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -82,6 +79,7 @@ class VariationalAutoEncoder(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+        print("Finished Training VAE")
 
 
 def loss_function(recon_x, x, mu, logvar):
