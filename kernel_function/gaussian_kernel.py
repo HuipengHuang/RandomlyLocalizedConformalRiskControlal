@@ -23,6 +23,7 @@ class GaussianKernel(BaseKernelFunction):
 
         # weight shape: [batch_size, calibration_set_size+1]
         weight = torch.exp(-l2 / 2)
+
         return weight
 
     def sample(self, test_feature, h):

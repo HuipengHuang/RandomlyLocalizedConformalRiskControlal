@@ -76,7 +76,7 @@ class BaseKernelFunction(ABC):
         return p
 
     def get_h(self, cal_feature, test_feature):
-        cal_feature, test_feature = cal_feature[:100], test_feature[:100]
+        test_feature =  test_feature[:100]
         print("Find hyperparamters---------")
         efficient_calibration_size = self.args.efficient_calibration_size
         assert efficient_calibration_size <= self.args.calibration_size
