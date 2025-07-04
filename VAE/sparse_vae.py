@@ -53,7 +53,7 @@ class SparseVAE(nn.Module):
         return total_loss
 
     def fit(self, holdout_feature, epochs=100, batch_size=32, learning_rate=1e-3):
-
+        print("Training SVAE")
         dataset = TensorDataset(holdout_feature)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -70,4 +70,5 @@ class SparseVAE(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+        print("Finish Training SVAE")
 

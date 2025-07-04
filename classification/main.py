@@ -32,7 +32,7 @@ parser.add_argument("--pca", default=None, choices=["pca", "ppca", "kernel_pca",
 parser.add_argument("--n_components", type=int, default=2)
 parser.add_argument("--efficient", default="True", help="PCA Hyperparamter")
 
-parser.add_argument("--vae", default=None)
+parser.add_argument("--vae", default=None, choices=["vae", "svae"])
 parser.add_argument("--latent_dim", type=int, default=None)
 
 parser.add_argument("--h", type=float, default=None)

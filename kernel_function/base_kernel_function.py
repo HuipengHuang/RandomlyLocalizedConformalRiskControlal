@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from PCA.utils import get_pca
 import torch
-from VAE.vae import VariationalAutoEncoder
-
+from VAE.utils import get_vae
 class BaseKernelFunction(ABC):
     def __init__(self, args, holdout_feature=None, h=None):
         #  h means hyperparamter
@@ -17,7 +16,7 @@ class BaseKernelFunction(ABC):
             self.V = None
 
         if args.vae:
-            self.VAE = VariationalAutoEncoder(input_dim=holdout_feature.shape[1], latent_dim=args.latent_dim if args.latent_dim else 10).to("cuda")
+            self.VAE = get_vae(args, input_dim=holdout_feature.shape[1]).to("cuda")
             self.VAE.train()
             self.VAE.fit(self.holdout_feature)
             self.VAE.eval()
@@ -30,7 +29,6 @@ class BaseKernelFunction(ABC):
         pass
 
     def fit_transform(self, cal_feature, test_feature):
-        print("here ia m")
         if self.holdout_feature is not None:
             if self.PCA is not None:
                 new_cal_feature = torch.tensor([], device="cuda")
