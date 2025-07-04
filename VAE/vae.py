@@ -63,8 +63,13 @@ class VariationalAutoEncoder(nn.Module):
                 reconstructed, mu, logvar = self(batch_features)
 
                 # Compute loss
-                reconstruction_loss = F.binary_cross_entropy(
-                    reconstructed, batch_features, reduction='sum'
+                #reconstruction_loss = F.binary_cross_entropy(
+                 #   reconstructed, batch_features, reduction='sum'
+                #)
+                reconstruction_loss = F.mse_loss(
+                    reconstructed,
+                    batch_features,
+                    reduction='sum'  # Sum over batch and features
                 )
 
                 # KL divergence
