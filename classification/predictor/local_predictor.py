@@ -87,7 +87,7 @@ class RandomlyLocalizedPredictor:
             accuracy = total_accuracy / total_samples
             coverage = total_coverage / total_samples
             avg_set_size = total_prediction_set_size / total_samples
-            class_coverage = np.array(class_coverage) / np.array(class_size)
+            class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
             result_dict = {
                 f"Top1Accuracy": accuracy,

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from PCA.utils import get_pca
 import torch
-
+from VAE.vae import VariationalAutoEncoder
 
 class BaseKernelFunction(ABC):
     def __init__(self, args, holdout_feature=None, h=None):
@@ -15,6 +15,10 @@ class BaseKernelFunction(ABC):
         else:
             self.PCA = None
             self.V = None
+
+        if args.vae:
+            self.VAE = VariationalAutoEncoder(input_dim=holdout_feature.shape[1], latent_dim=args.latent_dim if args.latent_dim else 10).to("cuda")
+            self.VAE.fit(self.holdout_feature)
 
     @abstractmethod
     def sample(self, test_feature):
