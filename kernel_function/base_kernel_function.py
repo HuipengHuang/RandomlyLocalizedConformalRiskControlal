@@ -76,11 +76,14 @@ class BaseKernelFunction(ABC):
         return p
 
     def get_h(self, cal_feature, test_feature):
+        cal_feature, test_feature = cal_feature[:100], test_feature[:100]
         print("Find hyperparamters---------")
         efficient_calibration_size = self.args.efficient_calibration_size
         assert efficient_calibration_size <= self.args.calibration_size
-        h_lower = 1e10
-        h_upper = 256.0
+        #h_lower = 1e10
+        #h_upper = 256.0
+        h_lower = cal_feature.shape[0] **(-1 / (cal_feature.shape[0]+4)) * torch.std(cal_feature)
+        h_upper = cal_feature.shape[0] **(-1 / (cal_feature.shape[0]+4)) * torch.std(cal_feature)
         while (True):
             sampled_features = self.sample(test_feature, h_lower)
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h_lower)
