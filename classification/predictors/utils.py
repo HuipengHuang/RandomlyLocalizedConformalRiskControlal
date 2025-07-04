@@ -3,14 +3,13 @@ import torch
 import seaborn as sns
 import os
 
-def plot_histogram(class_coverage_tensor, alpha, args):
-    risk_data = class_coverage_tensor.cpu().numpy()
+def plot_histogram(class_coverage_numpy, alpha, args):
 
     # Create figure
     fig, ax = plt.subplots(figsize=(6, 3))
 
     # Plot histogram
-    ax.hist(risk_data, bins=40, alpha=0.7, density=True)
+    ax.hist(class_coverage_numpy, bins=40, alpha=0.7, density=True)
 
     # Customize plot
     ax.set_xlabel('Coverage')

@@ -98,7 +98,7 @@ class RandomlyLocalizedPredictor:
                 f"class_coverage_gap": class_coverage_gap,
             }
 
-        return result_dict, class_coverage, class_size
+        return result_dict, class_coverage, np.array(class_size)
 
     def get_weighted_quantile(self, score, weight, alpha):
         """
