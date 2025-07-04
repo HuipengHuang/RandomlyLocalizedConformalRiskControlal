@@ -62,8 +62,8 @@ for _ in range(args.num_runs):
     with torch.no_grad():
         for data, target in holdout_dataloader:
             data, target = data.cuda(), target.cuda()
-            logits = net(data)
-            holdout_feature = torch.cat((holdout_feature, logits))
+            feature = net.get_feature(data)
+            holdout_feature = torch.cat((holdout_feature, feature))
 
     if args.kernel_function == "naive":
         predictor = Predictor(args, net)

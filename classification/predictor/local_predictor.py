@@ -67,6 +67,7 @@ class RandomlyLocalizedPredictor:
             total_accuracy = torch.sum(torch.argmax(test_prob, dim=-1) == test_target)
 
             test_score = self.score_function(test_prob)
+
             p = self.kernel_function.get_p(cal_feature, test_feature)
 
             threshold = self.get_weighted_quantile(
