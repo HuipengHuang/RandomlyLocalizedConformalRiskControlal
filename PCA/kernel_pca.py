@@ -31,7 +31,7 @@ class KernelPCA(BasePCA):
 
     def fit(self, X):
         """
-        Fit the Kernel PCA model to the data.
+        Fit the Kernel PCA models to the data.
 
         Args:
             X (np.ndarray): Input data, shape (n_samples, n_features)

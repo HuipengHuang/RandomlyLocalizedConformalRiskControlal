@@ -4,7 +4,7 @@ import torch
 class PCA:
     def __init__(self, args):
         """
-        Initialize PCA model.
+        Initialize PCA models.
 
         Args:
             n_components (int, optional): Number of components to keep. If None, defaults to 5.
@@ -17,7 +17,7 @@ class PCA:
 
     def fit(self, X):
         """
-        Fit the PCA model to the data using SVD.
+        Fit the PCA models to the data using SVD.
 
         Args:
             X (torch.Tensor): Input data, shape (n_samples, n_features).

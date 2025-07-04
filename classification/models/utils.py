@@ -1,5 +1,5 @@
 import os
-
+from .model import Model
 import torch
 import torchvision.models as models
 def build_model(args, num_classes):
@@ -33,7 +33,10 @@ def build_model(args, num_classes):
 
     if args.load == "True":
         load_model(args, net)
-    return net.to("cuda")
+    net = net.to("cuda")
+
+    model = Model(net, args)
+    return model
 
 def load_model(args, net):
         p = f"./data/{args.dataset}_{args.model}{0}net.pth"

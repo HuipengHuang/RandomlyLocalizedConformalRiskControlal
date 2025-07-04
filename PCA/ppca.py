@@ -90,7 +90,7 @@ class ProbabilisticPCA(BasePCA):
 
     def sample(self, n_samples=1):
         """
-        Generate samples from the fitted PPCA model.
+        Generate samples from the fitted PPCA models.
 
         Parameters:
         -----------
@@ -108,7 +108,7 @@ class ProbabilisticPCA(BasePCA):
 
     def log_likelihood(self, X):
         """
-        Calculate log likelihood of data under the model.
+        Calculate log likelihood of data under the models.
 
         Parameters:
         -----------

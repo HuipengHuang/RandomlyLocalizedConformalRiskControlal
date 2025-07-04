@@ -4,13 +4,13 @@ import torch
 from tqdm import tqdm
 
 class RandomlyLocalizedPredictor:
-    def __init__(self, args, net, kernel_function):
+    def __init__(self, args, model, kernel_function):
         self.score_function = get_score(args)
         self.kernel_function = kernel_function
-        self.net = net
+        self.model = model
         self.threshold = None
         self.alpha = args.alpha
-        self.device = next(net.parameters()).device
+        self.device = "cuda"
         self.args = args
 
     def calibrate(self, cal_feature, test_feature):
@@ -26,15 +26,19 @@ class RandomlyLocalizedPredictor:
         num_classes = self.args.num_classes
         with torch.no_grad():
             cal_feature = torch.tensor([], device="cuda")
+            cal_prob = torch.tensor([], device="cuda")
             cal_target = torch.tensor([], device="cuda", dtype=torch.int)
             for data, target in cal_loader:
                 data = data.to("cuda")
                 target = target.to("cuda")
-                logits = self.net(data)
-                cal_feature = torch.cat((cal_feature, logits), 0)
-                cal_target = torch.cat((cal_target, target), 0)
-            cal_prob = torch.softmax(cal_feature, dim=-1)
+                feature = self.model.get_feature(data)
+                logits = self.model.feature2logits(feature)
+                cal_prob = torch.cat((cal_prob, logits), dim=0)
 
+                cal_feature = torch.cat((cal_feature, feature), 0)
+                cal_target = torch.cat((cal_target, target), 0)
+
+            cal_prob = torch.softmax(cal_prob, dim=-1)
             cal_score = self.score_function.compute_target_score(cal_prob, cal_target)
 
             total_accuracy = 0
@@ -44,34 +48,39 @@ class RandomlyLocalizedPredictor:
             class_size = [0 for i in range(num_classes)]
             total_samples = 0
 
+            test_feature = torch.tensor([], device="cuda")
+            test_target = torch.tensor([], device="cuda", dtype=torch.int)
+            test_prob = torch.tensor([], device="cuda")
+
             for data, target in tqdm(test_loader, desc="Testing"):
                 data, target = data.to(self.device), target.to(self.device)
                 batch_size = target.shape[0]
                 total_samples += batch_size
 
-                logits = self.net(data)
-                weight = self.kernel_function.get_weight(
-                    cal_feature, logits)
+                feature = self.model.get_feature(data)
+                logits = self.model.feature2logits(feature)
 
-                prob = torch.softmax(logits, dim=-1)
-                prediction = torch.argmax(prob, dim=-1)
-                total_accuracy += (prediction == target).sum().item()
+                test_feature = torch.cat((test_feature, feature), 0)
+                test_prob = torch.cat((test_prob, logits), dim=0)
+                test_target = torch.cat((test_target, target), 0)
 
-                batch_score = self.score_function(prob)
+            test_prob = torch.softmax(test_prob, dim=-1)
+            test_score = self.score_function(test_prob)
+            p = self.kernel_function.get_p(cal_feature, test_feature)
 
-                threshold = self.get_weighted_quantile(
-                    torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), weight, alpha=self.alpha)
+            threshold = self.get_weighted_quantile(
+                torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), p, alpha=self.alpha)
 
-                prediction_set = (batch_score <= threshold.view(-1, 1)).to(torch.int)
+            prediction_set = (test_score <= threshold.view(-1, 1)).to(torch.int)
 
-                target_prediction_set = prediction_set[torch.arange(batch_size), target]
-                total_coverage += target_prediction_set.sum().item()
+            target_prediction_set = prediction_set[torch.arange(target.shape[0]), target]
+            total_coverage += target_prediction_set.sum().item()
 
-                total_prediction_set_size += prediction_set.sum().item()
+            total_prediction_set_size += prediction_set.sum().item()
 
-                for i in range(prediction_set.shape[0]):
-                    class_coverage[target[i]] += prediction_set[i, target[i]].item()
-                    class_size[target[i]] += 1
+            for i in range(prediction_set.shape[0]):
+                class_coverage[target[i]] += prediction_set[i, target[i]].item()
+                class_size[target[i]] += 1
 
 
             accuracy = total_accuracy / total_samples
