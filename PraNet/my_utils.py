@@ -220,7 +220,7 @@ def plot_histogram(fdr_tensor, alpha, args):
     if args.output_dir:
         # Create base filename
         if args.kernel_function != "naive":
-            base_name = f"{str(alpha).replace('.', '_')}_{args.kernel_function}_{args.dataset}_risk_histogram"
+            base_name = f"{args.num_runs}_{str(alpha).replace('.', '_')}_{args.kernel_function}_{args.dataset}_risk_histogram"
             if args.pca is not None:
                 base_name = str(args.pca) + f"_{args.n_components}_" + base_name
         else:
