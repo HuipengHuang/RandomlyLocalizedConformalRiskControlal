@@ -69,9 +69,6 @@ class BaseKernelFunction(ABC):
                 cal_feature shape: [calibration_set_size, feature_dim], test_feature shape: [batch_size, feature_dim]
                 """
         if self.PCA is not None or self.VAE is not None:
-            if self.args.efficient == "True":
-                cal_feature, test_feature = cal_feature @ self.V, test_feature @ self.V
-            else:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
 
         d = test_feature.shape[1]
