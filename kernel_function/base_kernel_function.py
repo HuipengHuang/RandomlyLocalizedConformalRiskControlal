@@ -44,7 +44,6 @@ class BaseKernelFunction(ABC):
                     out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
                     new_test_feature = torch.cat((new_test_feature, out_feature), dim=0)
             elif self.VAE is not None:
-                print("I am using")
                 new_cal_feature, new_test_feature = self.VAE.encode(cal_feature), self.VAE.encode(test_feature)
             else:
                 raise NotImplementedError
@@ -69,7 +68,7 @@ class BaseKernelFunction(ABC):
             Args:
                 cal_feature shape: [calibration_set_size, feature_dim], test_feature shape: [batch_size, feature_dim]
                 """
-        if self.PCA is not None:
+        if self.PCA is not None or self.VAE is not None:
             if self.args.efficient == "True":
                 cal_feature, test_feature = cal_feature @ self.V, test_feature @ self.V
             else:
