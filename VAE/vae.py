@@ -34,6 +34,7 @@ class VariationalAutoEncoder(nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
+
     def fit(self, holdout_feature, epochs=100, batch_size=32, learning_rate=1e-3):
         """
         Train the VAE on the given holdout features.
@@ -79,7 +80,7 @@ class VariationalAutoEncoder(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-        print("Finished Training VAE")
+        print("Finish Training VAE")
 
 
 def loss_function(recon_x, x, mu, logvar):
