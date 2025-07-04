@@ -13,7 +13,7 @@ from predictor.predictor import Predictor
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--models", type=str, default="resnet50", help='Choose neural network architecture.')
+parser.add_argument("--model", type=str, default="resnet50", help='Choose neural network architecture.')
 parser.add_argument("--dataset", type=str, default="cifar100", choices=["cifar10", "cifar100", "imagenet"],
                     help="Choose dataset for training.")
 parser.add_argument("--pretrained", default="True")
