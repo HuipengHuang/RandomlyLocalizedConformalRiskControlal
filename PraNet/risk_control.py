@@ -97,6 +97,7 @@ with torch.no_grad():
         mean_value = np.mean([result_dict_list[j][key] for j in range(len(result_dict_list))])
         print(f"{key}: {value}")
 
+    print()
     print(f"Mean FDR:{torch.mean(all_fdr_tensor)}")
 
     if args.plot == "True":
