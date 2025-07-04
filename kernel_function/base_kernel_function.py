@@ -65,12 +65,10 @@ class BaseKernelFunction(ABC):
         d = test_feature.shape[1]
 
         if self.args.efficient_calibration_size is None:
-            print("I am not here")
             sampled_features = self.sample(test_feature)
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, d)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
         else:
-            print(" I am here")
             assert self.h is None
             h, sampled_features = self.get_h(cal_feature, test_feature)
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
@@ -78,8 +76,7 @@ class BaseKernelFunction(ABC):
         return p
 
     def get_h(self, cal_feature, test_feature):
-        test_feature =  test_feature[:100]
-        print(cal_feature.shape, test_feature.shape)
+        sub_test_feature =  test_feature[:100]
         print("Find hyperparamters---------")
         efficient_calibration_size = self.args.efficient_calibration_size
         assert efficient_calibration_size <= self.args.calibration_size
@@ -88,8 +85,8 @@ class BaseKernelFunction(ABC):
         h_lower = cal_feature.shape[0] **(-1 / (cal_feature.shape[0]+4)) * torch.std(cal_feature)
         h_upper = cal_feature.shape[0] **(-1 / (cal_feature.shape[0]+4)) * torch.std(cal_feature)
         while (True):
-            sampled_features = self.sample(test_feature, h_lower)
-            weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h_lower)
+            sampled_features = self.sample(sub_test_feature, h_lower)
+            weight = self.calculate_weight(cal_feature, sub_test_feature, sampled_features, h_lower)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
 
             efficient_size = self.calculate_avg_efficient_sample_size(p)
@@ -102,8 +99,8 @@ class BaseKernelFunction(ABC):
                 h_lower /= 2
 
         while (True):
-            sampled_features = self.sample(test_feature, h_upper)
-            weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h_upper)
+            sampled_features = self.sample(sub_test_feature, h_upper)
+            weight = self.calculate_weight(cal_feature, sub_test_feature, sampled_features, h_upper)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
             efficient_size = self.calculate_avg_efficient_sample_size(p)
 
@@ -117,8 +114,8 @@ class BaseKernelFunction(ABC):
         sampled_features = None
         while(True):
             mid = (h_lower + h_upper) / 2
-            sampled_features = self.sample(test_feature, mid)
-            weight = self.calculate_weight(cal_feature, test_feature, sampled_features, mid)
+            sampled_features = self.sample(sub_test_feature, mid)
+            weight = self.calculate_weight(cal_feature, sub_test_feature, sampled_features, mid)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
             efficient_size = self.calculate_avg_efficient_sample_size(p)
             print(f"Efficient size {efficient_size} Low : {h_lower} Mid:{mid} High: {h_upper}")
@@ -131,6 +128,7 @@ class BaseKernelFunction(ABC):
             else:
                 h_lower = mid
         print(f"Finish finding hyperparamters. Efficient sample size: {efficient_size}")
+        sampled_features = self.sample(test_feature, mid)
         return mid, sampled_features
 
     @abstractmethod
