@@ -89,7 +89,7 @@ class Predictor:
                 f"AverageSetSize": avg_set_size,
                 f"Coverage": coverage,
                 f"WorstClassCoverage": np.min(class_coverage),
-                #f"class_coverage_gap": class_coverage_gap,
+                f"class_coverage_gap": class_coverage_gap,
             }
 
         return result_dict
