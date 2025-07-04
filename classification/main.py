@@ -48,6 +48,7 @@ mean_result_dict = {
                 f"AverageSetSize": 0,
                 f"Coverage": 0,
                 f"WorstClassCoverage": 0,
+                f"Class_coverage_gap": 0.0
             }
 
 with torch.no_grad():
