@@ -80,6 +80,7 @@ for _ in range(args.num_runs):
 
     result_dict, class_coverage, class_size = predictor.evaluate(cal_dataloader, test_dataloader)
     class_size_numpy = class_size_numpy + class_size
+    print(type(class_coverage_numpy), type(class_coverage), class_coverage_numpy.shape, class_coverage.shape)
     class_coverage_numpy = class_coverage_numpy + class_coverage * (class_size + 1e-6)
 
     for key, value in result_dict.items():
