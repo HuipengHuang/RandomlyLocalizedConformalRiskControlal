@@ -11,40 +11,39 @@ class ConformalRiskControl(nn.Module):
         self.alpha = args.alpha
 
     def forward(self, cal_loader, test_loader):
+        with torch.no_grad():
+            fdr_tensor = torch.tensor([], device="cuda")
+            size = 0
 
+            cal_res = torch.tensor([], device="cuda")
+            cal_gt = torch.tensor([], device="cuda")
+            for idx, (image, gt, origin_image_path) in tqdm(enumerate(cal_loader), desc="Calibarting"):
+                image = image.cuda()
+                gt = gt.cuda()
+                res = self.get_feature(image)
 
-        fdr_tensor = torch.tensor([], device="cuda")
-        size = 0
+                cal_gt = torch.cat((cal_gt, gt), 0)
+                cal_res = torch.cat((cal_res, res), 0)
 
-        cal_res = torch.tensor([], device="cuda")
-        cal_gt = torch.tensor([], device="cuda")
-        for idx, (image, gt, origin_image_path) in tqdm(enumerate(cal_loader), desc="Calibarting"):
-            image = image.cuda()
-            gt = gt.cuda()
-            res = self.get_feature(image)
+            _lambda = self.get_lambda(cal_res, cal_gt)
 
-            cal_gt = torch.cat((cal_gt, gt), 0)
-            cal_res = torch.cat((cal_res, res), 0)
+            for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
+                image = image.cuda()
+                gt = gt.cuda()
 
-        _lambda = self.get_lambda(cal_res, cal_gt)
+                res = self.get_feature(image)
+                pred = (res >= 1 - _lambda).to(torch.int)
 
-        for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
-            image = image.cuda()
-            gt = gt.cuda()
+                size += torch.sum(pred).item()
+                fdr = get_fnr_list(pred, gt)
 
-            res = self.get_feature(image)
-            pred = (res >= 1 - _lambda).to(torch.int)
+                fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
 
-            size += torch.sum(pred).item()
-            fdr = get_fnr_list(pred, gt)
+            result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
+                           "Var": torch.var(fdr_tensor).item(),
+                           "Avg_size": size / fdr_tensor.shape[0]}
 
-            fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
-
-        result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
-                       "Var": torch.var(fdr_tensor).item(),
-                       "Avg_size": size / fdr_tensor.shape[0]}
-
-        return result_dict, fdr_tensor
+            return result_dict, fdr_tensor
 
 
     def get_feature(self, image):

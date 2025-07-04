@@ -54,28 +54,29 @@ mean_result_dict = {
                 f"class_coverage_gap": 0.0
             }
 
-with torch.no_grad():
-    net.eval()
-    for _ in range(args.num_runs):
-        holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
-        holdout_feature = torch.tensor([], device="cuda")
+
+net.eval()
+for _ in range(args.num_runs):
+    holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
+    holdout_feature = torch.tensor([], device="cuda")
+    with torch.no_grad():
         for data, target in holdout_dataloader:
             data, target = data.cuda(), target.cuda()
             logits = net(data)
             holdout_feature = torch.cat((holdout_feature, logits))
 
-        if args.kernel_function == "naive":
-            predictor = Predictor(args, net)
-        else:
-            kernel_function = get_kernel_function(args, holdout_feature)
-            predictor = RandomlyLocalizedPredictor(args, net, kernel_function=kernel_function)
+    if args.kernel_function == "naive":
+        predictor = Predictor(args, net)
+    else:
+        kernel_function = get_kernel_function(args, holdout_feature)
+        predictor = RandomlyLocalizedPredictor(args, net, kernel_function=kernel_function)
 
-        result_dict = predictor.evaluate(cal_dataloader, test_dataloader)
-        for key, value in result_dict.items():
-            print(key, value)
-            mean_result_dict[key] += value
-        print()
+    result_dict = predictor.evaluate(cal_dataloader, test_dataloader)
+    for key, value in result_dict.items():
+        print(key, value)
+        mean_result_dict[key] += value
+    print()
 
-    print("Mean Result")
-    for key, value in mean_result_dict.items():
-        print(key, value / args.num_runs)
+print("Mean Result")
+for key, value in mean_result_dict.items():
+    print(key, value / args.num_runs)

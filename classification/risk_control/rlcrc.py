@@ -11,41 +11,42 @@ class RandomlyLocalizedConformalRiskControl(nn.Module):
         self.kernel_function = kernel_function
 
     def forward(self, cal_loader, test_loader):
-        cal_res = torch.tensor([], device='cuda')
-        cal_gt = torch.tensor([], device="cuda")
+        with torch.no_grad():
+            cal_res = torch.tensor([], device='cuda')
+            cal_gt = torch.tensor([], device="cuda")
 
-        for idx, (image, gt, origin_image_path) in tqdm(enumerate(cal_loader), desc="Compute calibration feature"):
-            image = image.cuda()
-            gt = gt.cuda()
-            res = self.get_feature(image)
-            cal_res = torch.cat((cal_res, res), dim=0)
-            cal_gt = torch.cat((cal_gt, gt), dim=0)
+            for idx, (image, gt, origin_image_path) in tqdm(enumerate(cal_loader), desc="Compute calibration feature"):
+                image = image.cuda()
+                gt = gt.cuda()
+                res = self.get_feature(image)
+                cal_res = torch.cat((cal_res, res), dim=0)
+                cal_gt = torch.cat((cal_gt, gt), dim=0)
 
-        fdr_tensor = torch.tensor([], device="cuda")
-        size = 0
-        for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
-            image = image.cuda()
-            gt = gt.cuda()
+            fdr_tensor = torch.tensor([], device="cuda")
+            size = 0
+            for idx, (image, gt, origin_image_path) in tqdm(enumerate(test_loader), desc="Testing"):
+                image = image.cuda()
+                gt = gt.cuda()
 
-            res = self.get_feature(image)
-            bsz, c, h, w = gt.shape
+                res = self.get_feature(image)
+                bsz, c, h, w = gt.shape
 
-            weight = self.kernel_function.get_weight(cal_res.view(cal_res.shape[0], -1), res.view(res.shape[0], -1))
+                weight = self.kernel_function.get_weight(cal_res.view(cal_res.shape[0], -1), res.view(res.shape[0], -1))
 
-            for j in range(bsz):
-                _lambda = self.get_lambda(cal_res, cal_gt, weight=weight[j])
-                pred = (res[j] >= 1 - _lambda).to(torch.int)
+                for j in range(bsz):
+                    _lambda = self.get_lambda(cal_res, cal_gt, weight=weight[j])
+                    pred = (res[j] >= 1 - _lambda).to(torch.int)
 
-                size += torch.sum(pred).item()
-                fdr = get_fnr_list(pred, gt[j])
+                    size += torch.sum(pred).item()
+                    fdr = get_fnr_list(pred, gt[j])
 
-                fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
+                    fdr_tensor = torch.cat((fdr_tensor, fdr), dim=0)
 
-        result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
-                       "Var": torch.var(fdr_tensor).item(),
-                       "Avg_size": size / fdr_tensor.shape[0]}
+            result_dict = {"MeanFDR": torch.mean(fdr_tensor).item(),
+                           "Var": torch.var(fdr_tensor).item(),
+                           "Avg_size": size / fdr_tensor.shape[0]}
 
-        return result_dict, fdr_tensor
+            return result_dict, fdr_tensor
 
 
     def get_feature(self, image):

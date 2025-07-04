@@ -52,19 +52,20 @@ parser.add_argument("--efficient_calibration_size", default=None, type=int)
 args = parser.parse_args()
 
 
-with torch.no_grad():
-    model = PraNet()
-    model.eval()
-    model.load_state_dict(torch.load(args.pth_path))
-    model.to("cuda")
-    cal_test_dataset, holdout_dataset = get_dataset(args)
-    cal_length = int(len(cal_test_dataset) * args.cal_ratio)
-    args.calibration_size = cal_length
-    holdout_feature = None
-    if holdout_dataset is not None:
-        holdout_dataloader = DataLoader(holdout_dataset, batch_size=args.batch_size, shuffle=False,
-                                        num_workers=args.num_workers)
-        holdout_feature = torch.tensor([], device="cuda")
+
+model = PraNet()
+model.eval()
+model.load_state_dict(torch.load(args.pth_path))
+model.to("cuda")
+cal_test_dataset, holdout_dataset = get_dataset(args)
+cal_length = int(len(cal_test_dataset) * args.cal_ratio)
+args.calibration_size = cal_length
+holdout_feature = None
+if holdout_dataset is not None:
+    holdout_dataloader = DataLoader(holdout_dataset, batch_size=args.batch_size, shuffle=False,
+                                    num_workers=args.num_workers)
+    holdout_feature = torch.tensor([], device="cuda")
+    with torch.no_grad():
         for image, gt, _ in holdout_dataloader:
             image, gt = image.to("cuda"), gt.to("cuda")
             res5, res4, res3, res2 = model(image)
@@ -76,14 +77,15 @@ with torch.no_grad():
             res = upsample(res)
             res = (res / args.T).sigmoid().data
             holdout_feature = torch.cat((holdout_feature, res), dim=0)
-        holdout_feature = holdout_feature.view(holdout_feature.shape[0], -1)
+    holdout_feature = holdout_feature.view(holdout_feature.shape[0], -1)
 
-    if args.kernel_function != "naive":
-        kernel_function = get_kernel_function(args, holdout_feature)
-        crc = RandomlyLocalizedConformalRiskControl(args, model, kernel_function)
-    else:
-        crc = ConformalRiskControl(args, model)
+if args.kernel_function != "naive":
+    kernel_function = get_kernel_function(args, holdout_feature)
+    crc = RandomlyLocalizedConformalRiskControl(args, model, kernel_function)
+else:
+    crc = ConformalRiskControl(args, model)
 
+with torch.no_grad():
     result_dict_list = []
     all_fdr_tensor = torch.tensor([], device="cuda")
 
