@@ -65,10 +65,12 @@ class BaseKernelFunction(ABC):
         d = test_feature.shape[1]
 
         if self.args.efficient_calibration_size is None:
+            print("I am not here")
             sampled_features = self.sample(test_feature)
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, d)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
         else:
+            print(" I am here")
             assert self.h is None
             h, sampled_features = self.get_h(cal_feature, test_feature)
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
