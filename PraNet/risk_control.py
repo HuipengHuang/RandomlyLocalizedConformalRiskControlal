@@ -25,7 +25,7 @@ parser.add_argument('--pth_path', type=str, default='./snapshots/PraNet_Res2Net/
 parser.add_argument("--num_runs", type=int, default=1, help="Number of runs")
 parser.add_argument("--kernel_function", type=str, default="naive", help="Kernel function")
 parser.add_argument("--alpha", type=float, default=0.1, help="Risk")
-parser.add_argument("--plot", default="False", choices=["True", "False"])
+parser.add_argument("--plot", default="True", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 parser.add_argument("--T", default=1.0, type=float)
 parser.add_argument("--num_workers", default=4, type=int)

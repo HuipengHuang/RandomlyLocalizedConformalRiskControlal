@@ -92,4 +92,4 @@ class Predictor:
                 f"class_coverage_gap": class_coverage_gap,
             }
 
-        return result_dict
+        return result_dict, class_coverage, np.array(class_size)

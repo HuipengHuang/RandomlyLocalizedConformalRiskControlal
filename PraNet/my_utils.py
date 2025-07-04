@@ -224,7 +224,9 @@ def plot_histogram(fdr_tensor, alpha, args):
             if args.pca is not None:
                 base_name = str(args.pca) + f"_{args.n_components}_" + base_name
             if args.vae is not None:
-                base_name = str(args.vae) + f"_{args.n_components}_" + base_name
+                base_name = str(args.vae) + f"_" + base_name
+            if args.efficient_calibration_size is not None:
+                base_name = str(args.efficient_calibration_size) + f"_" + base_name
         else:
             base_name = f"{str(alpha).replace('.', '_')}_{args.dataset}_risk_histogram"
 

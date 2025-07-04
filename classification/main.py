@@ -4,12 +4,14 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent  # Adjust if needed
 sys.path.append(str(project_root))
 import argparse
+import numpy as np
 from models.utils import build_model
 from dataset.utils import build_dataloader
 from kernel_function.utils import get_kernel_function
 import torch
-from predictor.local_predictor import RandomlyLocalizedPredictor
-from predictor.predictor import Predictor
+from predictors.local_predictor import RandomlyLocalizedPredictor
+from predictors.predictor import Predictor
+from predictors.utils import plot_histogram
 
 parser = argparse.ArgumentParser()
 
@@ -21,6 +23,8 @@ parser.add_argument("--load", type=str, default=None, help="Load pretrained weig
 parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
 parser.add_argument("--num_runs", default=1, type=int)
 parser.add_argument("--num_workers", default=4, type=int)
+parser.add_argument("--plot", default="True", choices=["True", "False"])
+parser.add_argument("--output_dir", default="./plot_results/")
 #  Hyperpatameters for Conformal Prediction
 parser.add_argument("--alpha", type=float, default=0.1, help="Error Rate")
 parser.add_argument("--score", type=str, default="thr", choices=["thr", "aps", "raps", "saps", "weight_score"])
@@ -56,6 +60,9 @@ mean_result_dict = {
 
 
 net.eval()
+class_coverage_numpy = np.zeros(shape=(num_classes,))
+class_size_numpy = np.zeros(shape=(num_classes,))
+
 for _ in range(args.num_runs):
     holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
     holdout_feature = torch.tensor([], device="cuda")
@@ -71,7 +78,10 @@ for _ in range(args.num_runs):
         kernel_function = get_kernel_function(args, holdout_feature)
         predictor = RandomlyLocalizedPredictor(args, net, kernel_function=kernel_function)
 
-    result_dict = predictor.evaluate(cal_dataloader, test_dataloader)
+    result_dict, class_coverage, class_size = predictor.evaluate(cal_dataloader, test_dataloader)
+    class_size_numpy = class_size_numpy + class_size
+    class_coverage_numpy = class_coverage_numpy + class_coverage * (class_size + 1e-6)
+
     for key, value in result_dict.items():
         print(key, value)
         mean_result_dict[key] += value
@@ -80,3 +90,6 @@ for _ in range(args.num_runs):
 print("Mean Result")
 for key, value in mean_result_dict.items():
     print(key, value / args.num_runs)
+
+if args.plot == "True":
+    plot_histogram(class_coverage_numpy/class_size_numpy, args.alpha, args)
