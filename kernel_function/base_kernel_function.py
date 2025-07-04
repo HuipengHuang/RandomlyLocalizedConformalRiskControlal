@@ -88,7 +88,7 @@ class BaseKernelFunction(ABC):
 
             efficient_size = self.calculate_avg_efficient_sample_size(p)
             efficient_size = 1 if torch.isnan(efficient_size) else efficient_size
-            print(f"Finding h_lower. Efficient size {efficient_size}")
+            #print(f"Finding h_lower. Efficient size {efficient_size}")
             if efficient_size <= efficient_calibration_size:
                 break
             else:
@@ -101,7 +101,7 @@ class BaseKernelFunction(ABC):
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
             efficient_size = self.calculate_avg_efficient_sample_size(p)
 
-            print(f"Finding h_upper. Efficient size {efficient_size} h_upper:{h_upper}")
+            #print(f"Finding h_upper. Efficient size {efficient_size} h_upper:{h_upper}")
             if efficient_size >= efficient_calibration_size:
                 break
             else:
