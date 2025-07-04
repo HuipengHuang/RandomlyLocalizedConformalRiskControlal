@@ -15,3 +15,6 @@ class Model(nn.Module):
     def eval(self):
         self.feature_extractor.eval()
         self.MLP.eval()
+
+    def forward(self, x):
+        return self.MLP(self.feature_extractor(x))
