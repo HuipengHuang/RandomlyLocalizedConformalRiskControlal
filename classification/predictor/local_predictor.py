@@ -79,8 +79,8 @@ class RandomlyLocalizedPredictor:
             total_prediction_set_size += prediction_set.sum().item()
 
             for i in range(prediction_set.shape[0]):
-                class_coverage[target[i]] += prediction_set[i, target[i]].item()
-                class_size[target[i]] += 1
+                class_coverage[test_target[i]] += prediction_set[i, test_target[i]].item()
+                class_size[test_target[i]] += 1
 
 
             accuracy = total_accuracy / total_samples
