@@ -118,7 +118,7 @@ class BaseKernelFunction(ABC):
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, mid)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
             efficient_size = self.calculate_avg_efficient_sample_size(p)
-            print(f"Efficient size {efficient_size} Mid:{mid}")
+            print(f"Efficient size {efficient_size} Low : {h_lower} Mid:{mid} High: {h_upper}")
 
             if abs(efficient_size - self.args.efficient_calibration_size) < 0.1 * self.args.efficient_calibration_size:
                 break
