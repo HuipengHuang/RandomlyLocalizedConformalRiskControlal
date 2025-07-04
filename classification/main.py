@@ -19,18 +19,21 @@ parser.add_argument("--dataset", type=str, default="cifar100", choices=["cifar10
 parser.add_argument("--pretrained", default="True")
 parser.add_argument("--load", type=str, default=None, help="Load pretrained weights.")
 parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
+parser.add_argument("--num_runs", default=1, type=int)
+parser.add_argument("--num_workers", default=4, type=int)
 #  Hyperpatameters for Conformal Prediction
 parser.add_argument("--alpha", type=float, default=0.1, help="Error Rate")
 parser.add_argument("--score", type=str, default="thr", choices=["thr", "aps", "raps", "saps", "weight_score"])
 parser.add_argument("--cal_ratio", type=float, default=0.5,
                     help="Ratio of calibration data's size. (1 - cal_ratio) means ratio of test data's size")
 parser.add_argument("--kernel_function", type=str, default="naive", help="Kernel function")
-parser.add_argument("--h", type=float, default=1)
-parser.add_argument("--num_runs", default=1, type=int)
-parser.add_argument("--num_workers", default=4, type=int)
+#  Hyperparamters for PCA
 parser.add_argument("--pca", default=None, choices=["pca", "ppca", "kernel_pca", "sparse_pca", "ppca", "robust_pca"])
 parser.add_argument("--n_components", type=int, default=2)
 parser.add_argument("--efficient", default="True", help="PCA Hyperparamter")
+
+parser.add_argument("--h", type=float, default=None)
+parser.add_argument("--efficient_calibration_size", default=None, type=int)
 args = parser.parse_args()
 
 num_classes = 1000
