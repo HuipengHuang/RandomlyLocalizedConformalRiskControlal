@@ -91,11 +91,11 @@ class BaseKernelFunction(ABC):
 
             efficient_size = self.calculate_avg_efficient_sample_size(p)
 
-            print(f"Finding h_lower. Efficient size {efficient_size}")
+            print(f"Finding h_lower. Efficient size {efficient_size} Lower:{h_lower}")
             if efficient_size <= efficient_calibration_size:
                 break
             else:
-                h_upper = h_lower
+                h_upper = h_lower.clone().cpu().to("cuda")
                 h_lower /= 2
 
         while (True):
