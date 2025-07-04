@@ -22,7 +22,7 @@ def plot_histogram(class_coverage_numpy, alpha, args):
         #label=f'Empirical: {torch.mean(class_coverage_tensor).item():.3f}'  # Format to 2 decimal places
     #)
 
-    ax.axvline(x=alpha, c='#999999', linestyle='--', alpha=0.7, label=f'1-α={1-alpha}')
+    ax.axvline(x=1 - alpha, c='#999999', linestyle='--', alpha=0.7, label=f'1-α={1-alpha}')
     ax.locator_params(axis='x', nbins=10)
     sns.despine(top=True, right=True)
 
