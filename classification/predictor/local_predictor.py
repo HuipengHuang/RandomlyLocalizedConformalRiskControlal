@@ -64,7 +64,7 @@ class RandomlyLocalizedPredictor:
                 test_target = torch.cat((test_target, target), 0)
 
             test_prob = torch.softmax(test_prob, dim=-1)
-            total_accuracy = torch.sum(torch.argmax(test_prob, dim=-1) == test_target) / test_target.shape[0]
+            total_accuracy = torch.sum(torch.argmax(test_prob, dim=-1) == test_target)
 
             test_score = self.score_function(test_prob)
             p = self.kernel_function.get_p(cal_feature, test_feature)
@@ -94,7 +94,7 @@ class RandomlyLocalizedPredictor:
                 f"AverageSetSize": avg_set_size,
                 f"Coverage": coverage,
                 f"WorstClassCoverage": np.min(class_coverage),
-                #f"{self.args.score}_class_coverage_gap": class_coverage_gap,
+                f"class_coverage_gap": class_coverage_gap,
             }
 
         return result_dict
