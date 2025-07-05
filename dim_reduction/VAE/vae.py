@@ -10,7 +10,7 @@ class VariationalAutoEncoder(nn.Module):
     def __init__(self, input_dim, latent_dim=10):
         super().__init__()
         self.input_dim = input_dim
-
+        print(f"input dimension:{input_dim}")
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 512),
