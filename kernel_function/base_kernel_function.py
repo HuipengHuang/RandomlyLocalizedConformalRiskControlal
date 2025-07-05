@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
-from dim_reduction.PCA.utils import get_pca
 import torch
-from dim_reduction.VAE.utils import get_vae
 from tqdm import tqdm
 import os
-from dim_reduction.MLP import DiversifyingMLP
+from dim_reduction.utils import get_dimension_reduction_tool
 
 class BaseKernelFunction(ABC):
     def __init__(self, args, holdout_feature=None, holdout_target=None, h=None):
@@ -14,27 +12,8 @@ class BaseKernelFunction(ABC):
         self.h = h
         self.h_lower = None
         self.h_upper = None
-        if args.pca:
-            self.PCA = get_pca(args)
-            self.V = self.PCA.fit(self.holdout_feature)
-        else:
-            self.PCA = None
-            self.V = None
 
-        if args.vae:
-            self.VAE = get_vae(args, input_dim=holdout_feature.shape[1]).to("cuda")
-            self.VAE.train()
-            self.VAE.fit(self.holdout_feature)
-            self.VAE.eval()
-        else:
-            self.VAE = None
-
-        if args.mlp == "True":
-            self.MLP = DiversifyingMLP(input_dim=holdout_feature.shape[1], output_dim=args.output_dim if args.output_dim else 10).to("cuda")
-            self.MLP.fit(holdout_feature, holdout_target)
-            self.MLP.eval()
-        else:
-            self.MLP = None
+        self.dimension_reduction_tool = get_dimension_reduction_tool(args, holdout_feature, holdout_target)
 
     @abstractmethod
     def sample(self, test_feature):
@@ -42,32 +21,7 @@ class BaseKernelFunction(ABC):
         pass
 
     def fit_transform(self, cal_feature, test_feature):
-        if self.holdout_feature is not None:
-            if self.PCA is not None:
-                if self.args.efficient == "True":
-                    new_cal_feature = cal_feature @ self.V
-                    new_test_feature = test_feature @ self.V
-                else:
-                    new_cal_feature = torch.tensor([], device="cuda")
-                    new_test_feature = torch.tensor([], device="cuda")
-                    for i in range(cal_feature.shape[0]):
-                        input_feature = torch.cat((self.holdout_feature, cal_feature[i].unsqueeze(0)), dim=0)
-                        out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
-                        new_cal_feature = torch.cat((new_cal_feature, out_feature), dim=0)
-
-                    for i in range(test_feature.shape[0]):
-                        input_feature = torch.cat((self.holdout_feature, test_feature[i].unsqueeze(0)), dim=0)
-                        out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
-                        new_test_feature = torch.cat((new_test_feature, out_feature), dim=0)
-            elif self.VAE is not None:
-                new_cal_feature, _ = self.VAE.encode(cal_feature)
-                new_test_feature, _ = self.VAE.encode(test_feature)
-            elif self.MLP is not None:
-                new_cal_feature, new_test_feature = self.MLP(cal_feature), self.MLP(test_feature)
-            else:
-                raise NotImplementedError
-        else:
-            raise NotImplementedError
+        new_cal_feature, new_test_feature = self.dimension_reduction_tool.fit_transform(cal_feature, test_feature)
         return new_cal_feature, new_test_feature
 
     def calculate_avg_efficient_sample_size(self, weight):

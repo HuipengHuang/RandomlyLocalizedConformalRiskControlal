@@ -2,7 +2,7 @@ import torch
 
 
 class PCA:
-    def __init__(self, args):
+    def __init__(self, args, holdout_feature):
         """
         Initialize PCA models.
 
@@ -14,6 +14,8 @@ class PCA:
         self.U = None
         self.eigen_values = None
         self.V = None
+        self.args = args
+        self.holdout_feature = holdout_feature
 
     def fit(self, X):
         """
@@ -90,7 +92,27 @@ class PCA:
         n = n_components if n_components is not None else self.n_components
         return self.V[:, :n]
 
-    def fit_transform(self, X):
+    def fit_transform(self, cal_feature, test_feature):
+        """Fit and transform the data."""
+        if self.args.efficient:
+            new_cal_feature = cal_feature @ self.V[:self.n_components]
+            new_test_feature = test_feature @ self.V[:self.n_components]
+        else:
+            new_cal_feature = torch.tensor([], device="cuda")
+            new_test_feature = torch.tensor([], device="cuda")
+            for i in range(cal_feature.shape[0]):
+                input_feature = torch.cat((self.holdout_feature, cal_feature[i].unsqueeze(0)), dim=0)
+                out_feature = self.fit_then_transform(input_feature)[-1].unsqueeze(0)
+                new_cal_feature = torch.cat((new_cal_feature, out_feature), dim=0)
+
+            for i in range(test_feature.shape[0]):
+                input_feature = torch.cat((self.holdout_feature, test_feature[i].unsqueeze(0)), dim=0)
+                out_feature = self.fit_then_transform(input_feature)[-1].unsqueeze(0)
+                new_test_feature = torch.cat((new_test_feature, out_feature), dim=0)
+
+        return new_cal_feature, new_test_feature
+
+    def fit_then_transform(self, X):
         """Fit and transform the data."""
         self.fit(X)
         return self.transform(X)

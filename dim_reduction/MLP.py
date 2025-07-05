@@ -99,5 +99,8 @@ class DiversifyingMLP(nn.Module):
                 optimizer.step()
         print("Finish Training MLP")
 
+    def fit_transform(self, cal_feature, test_feature):
+        return self.net(cal_feature), self.net(test_feature)
+
 
 

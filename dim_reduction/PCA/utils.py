@@ -10,9 +10,9 @@ import cv2
 import numpy as np
 
 
-def get_pca(args):
+def get_pca(args, holdout_feature):
     if args.pca == "pca":
-        return PCA(args)
+        return PCA(args, holdout_feature)
     elif args.pca == "kernel_pca":
         return KernelPCA(args)
     elif args.pca == "sparse_pca":

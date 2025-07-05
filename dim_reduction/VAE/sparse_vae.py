@@ -19,6 +19,11 @@ class SparseVAE(nn.Module):
         self.fc2 = nn.Linear(latent_dim, 512)
         self.fc3 = nn.Linear(512, input_dim)
 
+    def fit_transform(self, cal_feature, test_feature):
+        new_cal_feature, _ = self.encode(cal_feature)
+        new_test_feature, _ = self.encode(test_feature)
+        return new_cal_feature, new_test_feature
+
     def encode(self, x):
         h = F.relu(self.fc1(x))
         return self.fc_mu(h), self.fc_logvar(h)
