@@ -67,6 +67,9 @@ class VariationalAutoEncoder(nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
+    def add_noise(self, x):
+        return x + torch.randn_like(x) * 0.1
+
     def fit(self, holdout_feature, epochs=200, batch_size=64, learning_rate=1e-4):
         # Calculate and store normalization parameters
         self.feature_mean = holdout_feature.mean(dim=0)
@@ -83,7 +86,7 @@ class VariationalAutoEncoder(nn.Module):
             self.train()
             for batch in train_loader:
                 batch = batch[0]
-                recon, mu, logvar = self.forward(self.denormalize(batch))  # Decoder outputs denormalized
+                recon, mu, logvar = self.forward(self.denormalize(self.add_noise(batch)))  # Decoder outputs denormalized
 
                 # MSE on original scale
                 recon_loss = F.mse_loss(recon, self.denormalize(batch), reduction='sum')
