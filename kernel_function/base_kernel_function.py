@@ -62,7 +62,8 @@ class BaseKernelFunction(ABC):
                 new_test_feature, _ = self.VAE.encode(test_feature)
             elif self.MLP is not None:
                 new_cal_feature, new_test_feature = self.MLP(cal_feature), self.MLP(test_feature)
-                print(new_cal_feature.shape, new_test_feature.shape)
+                print(torch.sum(new_cal_feature.isnan()), torch.sum(new_test_feature.isnan()))
+                print("haha")
             else:
                 raise NotImplementedError
         else:
