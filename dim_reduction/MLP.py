@@ -48,6 +48,10 @@ class DiversifyingMLP(nn.Module):
             nn.Linear(512, output_dim)
         )
 
+        for layer in self.net:
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
+
     def forward(self, x):
         output = self.net(x)
         if torch.sum(output.isnan()) != 0 :
