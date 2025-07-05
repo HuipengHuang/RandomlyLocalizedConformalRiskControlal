@@ -80,6 +80,7 @@ class DiversifyingMLP(nn.Module):
                 batch_features = batch_features.to(device)
                 batch_labels = batch_labels.to(device)
 
+                print(torch.sum(batch_features.isnan()))
                 # Forward pass
                 embeddings = self(batch_features)
 
