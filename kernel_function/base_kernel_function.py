@@ -87,6 +87,7 @@ class BaseKernelFunction(ABC):
                 """
         if self.PCA is not None or self.VAE is not None or self.MLP is not None:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
+        print("I am here")
         self.plot_feature_distance(cal_feature, test_feature)
         d = test_feature.shape[1]
 
