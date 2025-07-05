@@ -49,7 +49,10 @@ class DiversifyingMLP(nn.Module):
         )
 
     def forward(self, x):
-        return self.net(x)
+        output = self.net(x)
+        if torch.sum(output.isnan()) != 0 :
+            print("Is nan")
+        return output
 
     def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, temperature=0.1):
         """
@@ -71,7 +74,7 @@ class DiversifyingMLP(nn.Module):
 
         # Initialize loss and optimizer
         criterion = SupConLoss(temperature=temperature)
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(self.net().parameters(), lr=learning_rate)
 
         for epoch in range(epochs):
             self.train()
@@ -80,7 +83,6 @@ class DiversifyingMLP(nn.Module):
                 batch_features = batch_features.to(device)
                 batch_labels = batch_labels.to(device)
 
-                print(torch.sum(batch_features.isnan()))
                 # Forward pass
                 embeddings = self(batch_features)
 
