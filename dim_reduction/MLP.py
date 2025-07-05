@@ -140,7 +140,6 @@ class DiversifyingMLP(nn.Module):
 
         for epoch in range(epochs):
             self.train()
-            epoch_loss = 0.0
 
             for batch_features, batch_labels in dataloader:
                 batch_features = batch_features.to(device)
@@ -158,9 +157,6 @@ class DiversifyingMLP(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-                epoch_loss += loss.item()
-
-            print(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss / len(dataloader):.4f}")
 
     def fit_transform(self, cal_feature, test_feature):
         return self(cal_feature), self(test_feature)
