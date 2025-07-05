@@ -148,11 +148,11 @@ class RandomlyLocalizedPredictor:
         import matplotlib.pyplot as plt
         plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
         i = 0
-        path = f"./plot_results/distance.pdf{i}"
+        path = f"./plot_results/distance{i}.pdf"
 
         while os.path.exists(path):
             i += 1
-            path = f"./plot_results/distance.pdf{i}"
+            path = f"./plot_results/distance{i}.pdf"
 
         plt.savefig(path)
         plt.show()
