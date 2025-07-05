@@ -1,5 +1,5 @@
 import os
-from .model import Model
+from .model import get_model
 import torch
 import torchvision.models as models
 def build_model(args, num_classes):
@@ -35,7 +35,7 @@ def build_model(args, num_classes):
         load_model(args, net)
     net = net.to("cuda")
 
-    model = Model(net, args)
+    model = get_model(net, args)
     return model
 
 def load_model(args, net):

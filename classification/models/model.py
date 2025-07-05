@@ -1,7 +1,7 @@
 import torch.nn as nn
-class Model(nn.Module):
+class FeatureModel(nn.Module):
     def __init__(self, net, args):
-        super(Model, self).__init__()
+        super(FeatureModel, self).__init__()
         self.net = net
         self.args = args
 
@@ -30,3 +30,30 @@ class Model(nn.Module):
         features = self.avgpool(features)
         features = features.flatten(1)  # Critical: flatten before MLP
         return self.MLP(features)
+
+class LogitsModel(nn.Module):
+    def __init__(self, net, args):
+
+        super(LogitsModel, self).__init__()
+        self.net = net
+        self.args = args
+
+    def get_feature(self, x):
+        return self.net(x)
+
+    def feature2logits(self, feature):
+        return feature
+
+    def eval(self):
+        self.net.eval()
+
+    def forward(self, x):
+        return self.net(x)
+
+def get_model(net, args):
+    if args.feature == "feature":
+        return FeatureModel(net, args)
+    elif args.feature == "logits":
+        return LogitsModel(net, args)
+    else:
+        raise NotImplementedError
