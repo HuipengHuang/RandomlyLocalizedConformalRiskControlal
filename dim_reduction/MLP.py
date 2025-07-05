@@ -60,6 +60,7 @@ class DiversifyingMLP(nn.Module):
             labels: Tensor of shape [N] with class indices
             temperature: Softmax temperature parameter
         """
+        print("Training MLP")
         device = "cuda"
         features = features.to(device)
         labels = labels.to(device)
@@ -89,6 +90,7 @@ class DiversifyingMLP(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+        print("Finish Training MLP")
 
 
 

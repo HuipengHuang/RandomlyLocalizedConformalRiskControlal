@@ -4,8 +4,8 @@ import torch
 
 class GaussianKernel(BaseKernelFunction):
     """H(x,x′) = 1 / ((2π * h**2)**d/2) * exp (−∥x−x′∥**2 / (2*h**2))"""
-    def __init__(self, args, holdout_feature=None, h=None):
-        super().__init__(args, holdout_feature, h)
+    def __init__(self, args, holdout_feature=None, holdout_target=None, h=None):
+        super().__init__(args, holdout_feature, holdout_target, h)
 
     def calculate_weight(self, cal_feature, test_feature, sampled_features, h):
         #  h could be a scaler, but also could be a tensor of shape [batch_size,]
