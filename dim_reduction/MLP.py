@@ -39,49 +39,96 @@ class SupConLoss(nn.Module):
         return loss
 
 
+class NPairLoss(nn.Module):
+    """N-Pair Loss with L2 distance (Euclidean distance)."""
+
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.temperature = temperature
+
+    def forward(self, embeddings, labels):
+        """
+        Args:
+            embeddings: Feature vectors [batch_size, feature_dim] (L2-normalized or not)
+            labels: Ground truth labels [batch_size]
+        """
+        device = embeddings.device
+        batch_size = embeddings.shape[0]
+
+        # Compute pairwise L2 distances (squared Euclidean distance)
+        # ||x_i - x_j||^2 = ||x_i||^2 + ||x_j||^2 - 2<x_i, x_j>
+        # If embeddings are L2-normalized, this simplifies to 2 - 2<x_i, x_j>
+        dist_matrix = torch.cdist(embeddings, embeddings, p=2).pow(2)  # [batch_size, batch_size]
+
+        # Convert distance to similarity (smaller distance -> higher similarity)
+        # We use negative squared L2 distance as "similarity" (scaled by temperature)
+        sim_matrix = -dist_matrix / self.temperature  # [batch_size, batch_size]
+
+        # Create mask for positive pairs (same class, excluding self)
+        pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()  # [batch_size, batch_size]
+        pos_mask.fill_diagonal_(False)  # Exclude self-comparison
+
+        # For each anchor, select one positive and all negatives
+        loss = 0.0
+        for i in range(batch_size):
+            # Positive: randomly select one from same class
+            pos_indices = torch.where(pos_mask[i])[0]
+            if len(pos_indices) == 0:
+                continue  # Skip if no positive pair (unlikely in balanced batches)
+            j = pos_indices[torch.randint(0, len(pos_indices), (1,))].item()
+
+            # Negatives: all samples from different classes
+            neg_mask = labels != labels[i]
+            if not neg_mask.any():
+                continue  # Skip if no negative pair
+
+            # Log-sum-exp for stability
+            numerator = sim_matrix[i, j]
+            denominator = torch.logsumexp(sim_matrix[i, neg_mask], dim=0)
+            loss += - (numerator - denominator)
+
+        return loss / batch_size
+
 class DiversifyingMLP(nn.Module):
-    def __init__(self, input_dim=2048, output_dim=10):  # Increased output dim for better separation
+    def __init__(self, input_dim=2048, output_dim=10):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, 512),
             nn.ReLU(),
             nn.Linear(512, output_dim)
         )
-
-        for layer in self.net:
-            if isinstance(layer, nn.Linear):
-                nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.net[0].weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.net[2].weight, mode='fan_out', nonlinearity='relu')
 
     def forward(self, x):
-        output = self.net(x)
-        if torch.sum(output.isnan()) != 0 :
-            print("Is nan")
-        return output
+        return self.net(x)
 
-    def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, temperature=0.1):
+    def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, loss_type="n_pair", temperature=0.1):
         """
-        Train with Supervised Contrastive Learning.
+        Train with either N-Pair Loss or SupCon Loss.
 
         Args:
-            features: Tensor of shape [N, feature_dim]
-            labels: Tensor of shape [N] with class indices
+            loss_type: "n_pair" or "supcon"
             temperature: Softmax temperature parameter
         """
-        print("Training MLP")
-        device = "cuda"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         features = features.to(device)
         labels = labels.to(device)
 
-        # Create DataLoader
-        dataset = TensorDataset(features, labels)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        # Initialize loss
+        if loss_type == "n_pair":
+            criterion = NPairLoss(temperature=temperature)
+        elif loss_type == "supcon":
+            criterion = SupConLoss(temperature=temperature)
+        else:
+            raise ValueError("loss_type must be 'n_pair' or 'supcon'")
 
-        # Initialize loss and optimizer
-        criterion = SupConLoss(temperature=temperature)
-        optimizer = optim.Adam(params=self.net.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        dataloader = DataLoader(TensorDataset(features, labels), batch_size=batch_size, shuffle=True)
 
         for epoch in range(epochs):
             self.train()
+            epoch_loss = 0.0
 
             for batch_features, batch_labels in dataloader:
                 batch_features = batch_features.to(device)
@@ -89,6 +136,7 @@ class DiversifyingMLP(nn.Module):
 
                 # Forward pass
                 embeddings = self(batch_features)
+                embeddings = F.normalize(embeddings, dim=1)  # L2-normalize for contrastive loss
 
                 # Compute loss
                 loss = criterion(embeddings, batch_labels)
@@ -97,10 +145,13 @@ class DiversifyingMLP(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-        print("Finish Training MLP")
+
+                epoch_loss += loss.item()
+
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss / len(dataloader):.4f}")
 
     def fit_transform(self, cal_feature, test_feature):
-        return self.net(cal_feature), self.net(test_feature)
+        return self(cal_feature), self(test_feature)
 
 
 
