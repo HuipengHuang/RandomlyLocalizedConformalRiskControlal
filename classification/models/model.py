@@ -1,4 +1,6 @@
 import torch.nn as nn
+import torch
+
 class FeatureModel(nn.Module):
     def __init__(self, net, args):
         super(FeatureModel, self).__init__()
@@ -50,10 +52,31 @@ class LogitsModel(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+class SoftmaxModel(nn.Module):
+    def __init__(self, net, args):
+        super(SoftmaxModel, self).__init__()
+        self.net = net
+        self.args = args
+
+    def get_feature(self, x):
+        logits = self.net(x)
+        return torch.softmax(logits, dim=1)
+
+    def feature2logits(self, feature):
+        raise NotImplementedError
+
+    def eval(self):
+        self.net.eval()
+
+    def forward(self, x):
+        return self.net(x)
+
 def get_model(net, args):
     if args.feature == "feature":
         return FeatureModel(net, args)
     elif args.feature == "logits":
         return LogitsModel(net, args)
+    elif args.feature == "softmax":
+        return SoftmaxModel(net, args)
     else:
         raise NotImplementedError

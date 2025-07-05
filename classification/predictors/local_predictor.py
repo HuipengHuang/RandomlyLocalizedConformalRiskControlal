@@ -34,7 +34,9 @@ class RandomlyLocalizedPredictor:
                 data = data.to("cuda")
                 target = target.to("cuda")
                 feature = self.model.get_feature(data)
-                logits = self.model.feature2logits(feature)
+
+                #logits = self.model.feature2logits(feature)
+                logits = self.model(data)
                 cal_prob = torch.cat((cal_prob, logits), dim=0)
 
                 cal_feature = torch.cat((cal_feature, feature), 0)
@@ -59,7 +61,8 @@ class RandomlyLocalizedPredictor:
                 total_samples += batch_size
 
                 feature = self.model.get_feature(data)
-                logits = self.model.feature2logits(feature)
+                #logits = self.model.feature2logits(feature)
+                logits = self.model(data)
 
                 test_feature = torch.cat((test_feature, feature), 0)
                 test_prob = torch.cat((test_prob, logits), dim=0)
