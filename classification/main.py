@@ -15,6 +15,8 @@ from predictors.utils import plot_histogram
 
 parser = argparse.ArgumentParser()
 
+parser.add_argument("--feature", default="feature", type=str)
+
 parser.add_argument("--model", type=str, default="resnet50", help='Choose neural network architecture.')
 parser.add_argument("--dataset", type=str, default="cifar100", choices=["cifar10", "cifar100", "imagenet"],
                     help="Choose dataset for training.")
