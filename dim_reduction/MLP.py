@@ -42,7 +42,7 @@ class SupConLoss(nn.Module):
 class NPairLoss(nn.Module):
     """N-Pair Loss with L2 distance (Euclidean distance)."""
 
-    def __init__(self, temperature=0.1):
+    def __init__(self, temperature=1e-1):
         super().__init__()
         self.temperature = temperature
 
