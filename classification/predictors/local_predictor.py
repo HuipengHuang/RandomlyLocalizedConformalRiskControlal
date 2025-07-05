@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 from classification.scores.utils import get_score
 import torch
@@ -145,5 +147,12 @@ class RandomlyLocalizedPredictor:
         normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
         import matplotlib.pyplot as plt
         plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
-        plt.savefig("./plot_results/distance.pdf")
+        i = 0
+        path = f"./plot_results/distance.pdf{i}"
+
+        while os.path.exists(path):
+            i += 1
+            path = f"./plot_results/distance.pdf{i}"
+
+        plt.savefig(path)
         plt.show()
