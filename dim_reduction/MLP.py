@@ -74,7 +74,7 @@ class DiversifyingMLP(nn.Module):
 
         # Initialize loss and optimizer
         criterion = SupConLoss(temperature=temperature)
-        optimizer = optim.Adam(self.net().parameters(), lr=learning_rate)
+        optimizer = optim.Adam(params=self.net.parameters(), lr=learning_rate)
 
         for epoch in range(epochs):
             self.train()
