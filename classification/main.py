@@ -39,6 +39,9 @@ parser.add_argument("--efficient", default="True", help="PCA Hyperparamter")
 parser.add_argument("--vae", default=None, choices=["vae", "svae"])
 parser.add_argument("--latent_dim", type=int, default=None)
 
+parser.add_argument("--mlp", default=None, choices=["True", "False"])
+parser.add_argument("--output_dim", type=int, default=None)
+
 parser.add_argument("--h", type=float, default=None)
 parser.add_argument("--efficient_calibration_size", default=None, type=int)
 parser.add_argument("--adaptive", type=str, default="False", choices=["True", "False"])
@@ -67,21 +70,23 @@ class_size_numpy = np.zeros(shape=(num_classes,))
 for _ in range(args.num_runs):
     holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
     holdout_feature = torch.tensor([], device="cuda")
+    holdout_target = torch.tensor([], device="cuda", dtype=torch.int)
     with torch.no_grad():
         for data, target in holdout_dataloader:
             data, target = data.cuda(), target.cuda()
             feature = net.get_feature(data)
             holdout_feature = torch.cat((holdout_feature, feature))
+            holdout_target = torch.cat((holdout_target, target))
 
     if args.kernel_function == "naive":
         predictor = Predictor(args, net)
     else:
-        kernel_function = get_kernel_function(args, holdout_feature)
+        kernel_function = get_kernel_function(args, holdout_feature, holdout_target)
         predictor = RandomlyLocalizedPredictor(args, net, kernel_function=kernel_function)
 
     result_dict, class_coverage, class_size = predictor.evaluate(cal_dataloader, test_dataloader)
     class_size_numpy = class_size_numpy + class_size
-    print(type(class_coverage_numpy), type(class_coverage), class_coverage_numpy.shape, class_coverage.shape)
+
     class_coverage_numpy = class_coverage_numpy + class_coverage * (class_size + 1e-6)
 
     for key, value in result_dict.items():

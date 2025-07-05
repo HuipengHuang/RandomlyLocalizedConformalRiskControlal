@@ -5,68 +5,90 @@ from torch.utils.data import DataLoader, TensorDataset
 import torch.optim as optim
 
 
+class SupConLoss(nn.Module):
+    """Supervised Contrastive Learning loss (Khosla et al., 2020)"""
+
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.temperature = temperature
+
+    def forward(self, features, labels):
+        """
+        Args:
+            features: Normalized feature vectors [batch_size, feature_dim]
+            labels: Ground truth labels [batch_size]
+        """
+        device = features.device
+        batch_size = features.shape[0]
+
+        # Compute similarity matrix
+        features = F.normalize(features, dim=1)
+        sim_matrix = torch.matmul(features, features.T) / self.temperature
+
+        # Create mask for positives (same class, excluding self)
+        label_matrix = labels.unsqueeze(0) == labels.unsqueeze(1)  # [batch_size, batch_size]
+        pos_mask = label_matrix.fill_diagonal_(False)  # Exclude self-comparison
+
+        # Compute log-softmax
+        exp_sim = torch.exp(sim_matrix)
+        log_prob = torch.log(exp_sim * pos_mask) - torch.log(exp_sim.sum(dim=1, keepdim=True))
+
+        # Sum over positives
+        loss = -log_prob[pos_mask].sum() / pos_mask.sum()
+
+        return loss
+
+
 class DiversifyingMLP(nn.Module):
-    def __init__(self, input_dim=2048, output_dim=5):
+    def __init__(self, input_dim=2048, output_dim=10):  # Increased output dim for better separation
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(input_dim, 1024),
+            nn.Linear(input_dim, 512),
             nn.ReLU(),
-            nn.Linear(1024, output_dim)  # Output features for distance comparison
+            nn.Linear(512, output_dim)
         )
 
     def forward(self, x):
         return self.net(x)
 
-    def fit(self, holdout_feature, epochs=100, batch_size=32, learning_rate=1e-3):
+    def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, temperature=0.1):
         """
-        Train the VAE on the given holdout features.
+        Train with Supervised Contrastive Learning.
 
         Args:
-            holdout_feature: Tensor of shape [holdout_set_size, feature_dim] - the data to train on
-            epochs: Number of training epochs
-            batch_size: Batch size for training
-            learning_rate: Learning rate for optimizer
+            features: Tensor of shape [N, feature_dim]
+            labels: Tensor of shape [N] with class indices
+            temperature: Softmax temperature parameter
         """
-        print("Training MLP")
+        device = "cuda"
+        features = features.to(device)
+        labels = labels.to(device)
+
         # Create DataLoader
-        dataset = TensorDataset(holdout_feature)
+        dataset = TensorDataset(features, labels)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        # Set up optimizer and loss function
+        # Initialize loss and optimizer
+        criterion = SupConLoss(temperature=temperature)
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
-        optimizer = torch.optim.Adam(self.net.parameters(), lr=1e-3)
-        criterion = TripletLoss(margin=margin)
-
         for epoch in range(epochs):
-            total_loss = 0.0
-            for batch in dataloader:
-                # Assume batch contains triplets: (anchor, positive, negative)
-                anchor, positive, negative = batch
-                anchor, positive, negative = anchor.to(device), positive.to(device), negative.to(device)
+            self.train()
 
-                # Get features from the pre-trained feature extractor (e.g., ResNet)
-                with torch.no_grad():
-                    anchor_feats = feature_extractor(anchor)
-                    positive_feats = feature_extractor(positive)
-                    negative_feats = feature_extractor(negative)
+            for batch_features, batch_labels in dataloader:
+                batch_features = batch_features.to(device)
+                batch_labels = batch_labels.to(device)
 
-                # Project features using MLP
-                anchor_out = mlp(anchor_feats)
-                positive_out = mlp(positive_feats)
-                negative_out = mlp(negative_feats)
+                # Forward pass
+                embeddings = self(batch_features)
 
-                # Compute loss and update
-                loss = criterion(anchor_out, positive_out, negative_out)
+                # Compute loss
+                loss = criterion(embeddings, batch_labels)
+
+                # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item()
-
-            print(f"Epoch {epoch + 1}, Loss: {total_loss / len(dataloader):.4f}")
 
 
-def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return BCE + KLD
+

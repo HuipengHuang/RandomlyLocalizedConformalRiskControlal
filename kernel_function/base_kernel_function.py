@@ -4,10 +4,10 @@ import torch
 from dim_reduction.VAE.utils import get_vae
 from tqdm import tqdm
 import os
-
+from dim_reduction.MLP import DiversifyingMLP
 
 class BaseKernelFunction(ABC):
-    def __init__(self, args, holdout_feature=None, h=None):
+    def __init__(self, args, holdout_feature=None, holdout_target=None, h=None):
         #  h means hyperparamter
         self.args = args
         self.holdout_feature = holdout_feature
@@ -28,6 +28,11 @@ class BaseKernelFunction(ABC):
             self.VAE.eval()
         else:
             self.VAE = None
+
+        if args.mlp == "True":
+            self.MLP = DiversifyingMLP(input_dim=holdout_feature.shape[1], output_dim=args.output_dim if args.output_dim else 10).to("cuda")
+            self.MLP.fit(holdout_feature, holdout_target)
+            self.MLP.eval()
 
     @abstractmethod
     def sample(self, test_feature):
@@ -55,6 +60,8 @@ class BaseKernelFunction(ABC):
             elif self.VAE is not None:
                 new_cal_feature, _ = self.VAE.encode(cal_feature)
                 new_test_feature, _ = self.VAE.encode(test_feature)
+            elif self.MLP is not None:
+                new_cal_feature, new_test_feature = self.MLP(cal_feature), self.MLP(test_feature)
             else:
                 raise NotImplementedError
         else:
