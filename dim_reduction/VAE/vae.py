@@ -68,7 +68,7 @@ class VariationalAutoEncoder(nn.Module):
         return self.decode(z), mu, logvar
 
     def add_noise(self, x):
-        return x + torch.randn_like(x) * 0.1
+        return x + torch.randn_like(x) * 1
 
     def fit(self, holdout_feature, epochs=200, batch_size=32, learning_rate=1e-3):
         # Calculate and store normalization parameters
