@@ -3,6 +3,8 @@ from PCA.utils import get_pca
 import torch
 from VAE.utils import get_vae
 from tqdm import tqdm
+import os
+
 
 class BaseKernelFunction(ABC):
     def __init__(self, args, holdout_feature=None, h=None):
@@ -74,7 +76,7 @@ class BaseKernelFunction(ABC):
                 """
         if self.PCA is not None or self.VAE is not None:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
-
+        self.plot_feature_distance(cal_feature, test_feature)
         d = test_feature.shape[1]
 
         if self.args.efficient_calibration_size is None:
@@ -156,4 +158,24 @@ class BaseKernelFunction(ABC):
     @abstractmethod
     def sample(self, test_feature, h):
         pass
+
+    def plot_feature_distance(self, cal_feature, test_feature):
+        d = test_feature.shape[1]
+        cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
+        for i in range(test_feature.shape[0]):
+            cal_distance[i] = torch.sum(((cal_feature - test_feature[i]) / d) ** 2, dim=-1)**(0.5)
+        min_val = torch.min(cal_distance)
+        max_val = torch.max(cal_distance)
+        normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
+        import matplotlib.pyplot as plt
+        plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
+        i = 0
+        path = f"./plot_results/distance{i}.pdf"
+
+        while os.path.exists(path):
+            i += 1
+            path = f"./plot_results/distance{i}.pdf"
+
+        plt.savefig(path)
+        plt.show()
 

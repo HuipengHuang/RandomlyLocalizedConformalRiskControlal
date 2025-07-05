@@ -70,7 +70,6 @@ class RandomlyLocalizedPredictor:
 
             test_score = self.score_function(test_prob)
 
-            self.plot_feature_distance(cal_feature, test_feature)
             p = self.kernel_function.get_p(cal_feature, test_feature)
 
             threshold = self.get_weighted_quantile(
@@ -137,22 +136,4 @@ class RandomlyLocalizedPredictor:
 
         return quantiles
 
-    def plot_feature_distance(self, cal_feature, test_feature):
-        d = test_feature.shape[1]
-        cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
-        for i in range(test_feature.shape[0]):
-            cal_distance[i] = torch.sum(((cal_feature - test_feature[i]) / d) ** 2, dim=-1)**(0.5)
-        min_val = torch.min(cal_distance)
-        max_val = torch.max(cal_distance)
-        normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
-        import matplotlib.pyplot as plt
-        plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
-        i = 0
-        path = f"./plot_results/distance{i}.pdf"
 
-        while os.path.exists(path):
-            i += 1
-            path = f"./plot_results/distance{i}.pdf"
-
-        plt.savefig(path)
-        plt.show()
