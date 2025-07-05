@@ -14,7 +14,6 @@ class GaussianKernel(BaseKernelFunction):
             h = torch.zeros(size=(test_feature.shape[0], 1), device="cuda") + h
         d = test_feature.shape[1]
 
-        print(test_feature.shape, sampled_features.shape, h.shape)
         test_distance = torch.sum(((test_feature - sampled_features) / d / h) ** 2, dim=-1)
 
         # cal_distance shape: [batch_size, calibration_set_size]

@@ -33,6 +33,8 @@ class BaseKernelFunction(ABC):
             self.MLP = DiversifyingMLP(input_dim=holdout_feature.shape[1], output_dim=args.output_dim if args.output_dim else 10).to("cuda")
             self.MLP.fit(holdout_feature, holdout_target)
             self.MLP.eval()
+        else:
+            self.MLP = None
 
     @abstractmethod
     def sample(self, test_feature):
@@ -98,18 +100,22 @@ class BaseKernelFunction(ABC):
         elif self.args.adaptive == "False":
             assert self.h is None
             print("Find hyperparamters---------")
-            h, _= self.get_h(cal_feature, test_feature)
+            h = self.get_h(cal_feature, test_feature)
             sampled_features = self.sample(test_feature, h)
             print("Finish finding hyperparameter")
+
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
         else:
             print("Find hyperparamters---------")
-            h, sampled_features = torch.zeros(size=(test_feature.shape[0], 1), device="cuda"), torch.zeros_like(test_feature)
+            h = torch.zeros(size=(test_feature.shape[0], 1), device="cuda")
 
             for i in tqdm(range(test_feature.shape[0]), desc=f"Finding Hyperparameter"):
-                h[i], sampled_features[i] = self.get_h(cal_feature, test_feature[i].unsqueeze(0))
+                h[i] = self.get_h(cal_feature, test_feature[i].unsqueeze(0))
             print("Finish finding hyperparameter")
+
+            sampled_features = self.sample(test_feature, h)
+
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
         return p
@@ -166,7 +172,7 @@ class BaseKernelFunction(ABC):
         self.h_lower = h_lower
         self.h_upper = h_upper
 
-        return mid, sampled_features
+        return mid
 
     @abstractmethod
     def sample(self, test_feature, h):
