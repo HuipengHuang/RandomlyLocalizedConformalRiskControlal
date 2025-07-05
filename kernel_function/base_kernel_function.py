@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from PCA.utils import get_pca
+from dim_reduction.PCA.utils import get_pca
 import torch
-from VAE.utils import get_vae
+from dim_reduction.VAE.utils import get_vae
 from tqdm import tqdm
 import os
 
@@ -37,17 +37,21 @@ class BaseKernelFunction(ABC):
     def fit_transform(self, cal_feature, test_feature):
         if self.holdout_feature is not None:
             if self.PCA is not None:
-                new_cal_feature = torch.tensor([], device="cuda")
-                new_test_feature = torch.tensor([], device="cuda")
-                for i in range(cal_feature.shape[0]):
-                    input_feature = torch.cat((self.holdout_feature, cal_feature[i].unsqueeze(0)), dim=0)
-                    out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
-                    new_cal_feature = torch.cat((new_cal_feature, out_feature), dim=0)
+                if self.args.efficient == "True":
+                    new_cal_feature = cal_feature @ self.V
+                    new_test_feature = test_feature @ self.V
+                else:
+                    new_cal_feature = torch.tensor([], device="cuda")
+                    new_test_feature = torch.tensor([], device="cuda")
+                    for i in range(cal_feature.shape[0]):
+                        input_feature = torch.cat((self.holdout_feature, cal_feature[i].unsqueeze(0)), dim=0)
+                        out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
+                        new_cal_feature = torch.cat((new_cal_feature, out_feature), dim=0)
 
-                for i in range(test_feature.shape[0]):
-                    input_feature = torch.cat((self.holdout_feature, test_feature[i].unsqueeze(0)), dim=0)
-                    out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
-                    new_test_feature = torch.cat((new_test_feature, out_feature), dim=0)
+                    for i in range(test_feature.shape[0]):
+                        input_feature = torch.cat((self.holdout_feature, test_feature[i].unsqueeze(0)), dim=0)
+                        out_feature = self.PCA.fit_transform(input_feature)[-1].unsqueeze(0)
+                        new_test_feature = torch.cat((new_test_feature, out_feature), dim=0)
             elif self.VAE is not None:
                 new_cal_feature, _ = self.VAE.encode(cal_feature)
                 new_test_feature, _ = self.VAE.encode(test_feature)
