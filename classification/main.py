@@ -68,7 +68,7 @@ class_coverage_numpy = np.zeros(shape=(num_classes,))
 class_size_numpy = np.zeros(shape=(num_classes,))
 
 for i in range(args.num_runs):
-    args.current_runs = i
+    args.current_run = i
     holdout_dataloader, cal_dataloader, test_dataloader, num_classes = build_dataloader(args)
     holdout_feature = torch.tensor([], device="cuda")
     holdout_target = torch.tensor([], device="cuda", dtype=torch.int)
