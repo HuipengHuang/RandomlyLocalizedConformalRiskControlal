@@ -144,6 +144,6 @@ class RandomlyLocalizedPredictor:
         max_val = torch.max(cal_distance)
         normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
         import matplotlib.pyplot as plt
-        plt.hist(normalized_distance, bins=100)
+        plt.hist(normalized_distance.cpu().numpy(), bins=100)
         plt.savefig("./plot_results/distance.pdf")
         plt.show()
