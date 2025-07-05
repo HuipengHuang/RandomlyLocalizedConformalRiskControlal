@@ -97,6 +97,8 @@ class PCA:
         """Fit and transform the data."""
 
         if self.args.efficient:
+            cal_feature = cal_feature - self.mean.unsqueeze(0)
+            test_feature = test_feature - self.mean.unsqueeze(0)
             new_cal_feature = cal_feature @ self.V_n
             new_test_feature = test_feature @ self.V_n
         else:
