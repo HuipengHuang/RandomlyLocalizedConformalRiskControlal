@@ -31,7 +31,7 @@ class SupConLoss(nn.Module):
 
         # Compute log-softmax
         exp_sim = torch.exp(sim_matrix)
-        log_prob = torch.log(exp_sim * pos_mask) - torch.log(exp_sim.sum(dim=1, keepdim=True))
+        log_prob = torch.log(exp_sim * pos_mask + 1e-6) - torch.log(exp_sim.sum(dim=1, keepdim=True) + 1e-6)
 
         # Sum over positives
         loss = -log_prob[pos_mask].sum() / pos_mask.sum()
