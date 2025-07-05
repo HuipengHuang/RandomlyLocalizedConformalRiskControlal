@@ -91,9 +91,8 @@ class BaseKernelFunction(ABC):
         else:
             print("Find hyperparamters---------")
             h, sampled_features = torch.zeros(size=(test_feature.shape[0], 1), device="cuda"), torch.zeros_like(test_feature)
-            index = 1
-            for i in tqdm(range(test_feature.shape[0]), desc=f"Finding Hyperparameter: {index} / {test_feature.shape[0]}"):
-                index += 1
+
+            for i in tqdm(range(test_feature.shape[0]), desc=f"Finding Hyperparameter"):
                 h[i], sampled_features[i] = self.get_h(cal_feature, test_feature[i].unsqueeze(0))
             print("Finish finding hyperparameter")
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
