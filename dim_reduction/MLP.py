@@ -69,7 +69,7 @@ class NPairLoss(nn.Module):
         pos_mask.fill_diagonal_(False)  # Exclude self-comparison
 
         # For each anchor, select one positive and all negatives
-        loss = 0.0
+        loss = torch.tensor(0.0, device=device, requires_grad=True)
         for i in range(batch_size):
             # Positive: randomly select one from same class
             pos_indices = torch.where(pos_mask[i])[0]
@@ -123,7 +123,7 @@ class DiversifyingMLP(nn.Module):
         else:
             raise ValueError("loss_type must be 'n_pair' or 'supcon'")
 
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate, weight_decay=1e-5)
         dataloader = DataLoader(TensorDataset(features, labels), batch_size=batch_size, shuffle=True)
 
         for epoch in range(epochs):
