@@ -16,6 +16,7 @@ class PCA:
         self.V = None
         self.args = args
         self.holdout_feature = holdout_feature
+        self.V_n = self.fit(holdout_feature)
 
     def fit(self, X):
         """
@@ -94,9 +95,10 @@ class PCA:
 
     def fit_transform(self, cal_feature, test_feature):
         """Fit and transform the data."""
+
         if self.args.efficient:
-            new_cal_feature = cal_feature @ self.V[:self.n_components]
-            new_test_feature = test_feature @ self.V[:self.n_components]
+            new_cal_feature = cal_feature @ self.V_n
+            new_test_feature = test_feature @ self.V_n
         else:
             new_cal_feature = torch.tensor([], device="cuda")
             new_test_feature = torch.tensor([], device="cuda")
