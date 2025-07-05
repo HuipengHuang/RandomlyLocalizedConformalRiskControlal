@@ -14,11 +14,11 @@ class VariationalAutoEncoder(nn.Module):
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 512),
-            nn.BatchNorm1d(512),
-            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.ReLU(),
             nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.LeakyReLU(0.2)
+            nn.Dropout(0.2),
+            nn.ReLU()
         )
 
         self.fc_mu = nn.Linear(256, latent_dim)
@@ -27,11 +27,11 @@ class VariationalAutoEncoder(nn.Module):
         # Decoder (no final activation)
         self.decoder = nn.Sequential(
             nn.Linear(latent_dim, 256),
-            nn.BatchNorm1d(256),
-            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.ReLU(),
             nn.Linear(256, 512),
-            nn.BatchNorm1d(512),
-            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.ReLU(),
             nn.Linear(512, input_dim)
         )
 
