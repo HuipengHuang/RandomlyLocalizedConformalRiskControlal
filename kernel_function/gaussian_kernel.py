@@ -8,14 +8,19 @@ class GaussianKernel(BaseKernelFunction):
         super().__init__(args, holdout_feature, h)
 
     def calculate_weight(self, cal_feature, test_feature, sampled_features, h):
+        #  h could be a scaler, but also could be a tensor of shape [batch_size,]
+        #  The first two line makes sure h is of shape [batch_size, ]
+        if h.dim() == 0:
+            h = torch.zeros(size=(test_feature.shape[0], 1), device="cuda") + h
         d = test_feature.shape[1]
+
         test_distance = torch.sum(((test_feature - sampled_features) / d / h) ** 2, dim=-1)
 
         # cal_distance shape: [batch_size, calibration_set_size]
         # cal_distance = torch.sum(((cal_feature - sampled_features.unsqueeze(dim=1)) / d) ** 2, dim=-1)
         cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
         for i in range(test_feature.shape[0]):
-            cal_distance[i] = torch.sum(((cal_feature - sampled_features[i]) / d / h) ** 2, dim=-1)
+            cal_distance[i] = torch.sum(((cal_feature - sampled_features[i]) / d / h[i]) ** 2, dim=-1)
 
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
         #  To avoid too large number in pytorch.

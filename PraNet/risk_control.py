@@ -49,6 +49,7 @@ parser.add_argument("--latent_dim", type=int, default=None)
 
 parser.add_argument("--h", type=float, default=None, help="hyperparameter for gaussian kernel")
 parser.add_argument("--efficient_calibration_size", default=None, type=int)
+parser.add_argument("--adaptive", type=str, default="False", choices=["True", "False"])
 args = parser.parse_args()
 
 
