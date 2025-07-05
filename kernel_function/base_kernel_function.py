@@ -43,8 +43,11 @@ class BaseKernelFunction(ABC):
                 """
         if self.dimension_reduction_tool is not None:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
+        print(self.args.current_run)
+        print("haha")
         if self.args.current_run == 0:
             self.plot_feature_distance(cal_feature, test_feature)
+            print("Plot feature distance")
         d = test_feature.shape[1]
 
         if self.args.efficient_calibration_size is None:
