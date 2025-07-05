@@ -87,7 +87,7 @@ class BaseKernelFunction(ABC):
                 """
         if self.PCA is not None or self.VAE is not None or self.MLP is not None:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
-        print("I am here")
+
         self.plot_feature_distance(cal_feature, test_feature)
         d = test_feature.shape[1]
 
@@ -98,7 +98,8 @@ class BaseKernelFunction(ABC):
         elif self.args.adaptive == "False":
             assert self.h is None
             print("Find hyperparamters---------")
-            h, sampled_features = self.get_h(cal_feature, test_feature)
+            h, _= self.get_h(cal_feature, test_feature)
+            sampled_features = self.sample(test_feature, h)
             print("Finish finding hyperparameter")
             weight = self.calculate_weight(cal_feature, test_feature, sampled_features, h)
             p = weight / torch.sum(weight, dim=-1).unsqueeze(-1)
