@@ -39,67 +39,67 @@ class SupConLoss(nn.Module):
         return loss
 
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
 class NPairLoss(nn.Module):
     """N-Pair Loss with L2 distance (Euclidean distance)."""
 
-    def __init__(self, temperature=1e-1):
-        super().__init__()
+    def __init__(self, temperature=0.1):
+        super(NPairLoss, self).__init__()
         self.temperature = temperature
 
-    class NPairLoss(nn.Module):
-        """N-Pair Loss with L2 distance (Euclidean distance)."""
+    def forward(self, embeddings, labels):
+        """
+        Args:
+            embeddings: Feature vectors [batch_size, feature_dim]
+            labels: Ground truth labels [batch_size]
+        Returns:
+            loss: PyTorch tensor with gradient tracking
+        """
+        device = embeddings.device
+        batch_size = embeddings.shape[0]
 
-        def __init__(self, temperature=1e-1):
-            super().__init__()
-            self.temperature = temperature
+        # L2 normalize embeddings
+        embeddings = F.normalize(embeddings, p=2, dim=1)
 
-        def forward(self, embeddings, labels):
-            """
-            Args:
-                embeddings: Feature vectors [batch_size, feature_dim]
-                labels: Ground truth labels [batch_size]
-            Returns:
-                loss: PyTorch tensor with gradient tracking
-            """
-            device = embeddings.device
-            batch_size = embeddings.shape[0]
+        # Compute pairwise similarity matrix
+        sim_matrix = torch.matmul(embeddings, embeddings.t()) / self.temperature
 
-            # Compute pairwise squared L2 distances
-            dist_matrix = torch.cdist(embeddings, embeddings, p=2).pow(2)  # [batch_size, batch_size]
+        # Create mask for positive pairs (same class, excluding self)
+        pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()
+        pos_mask.fill_diagonal_(False)
 
-            # Convert distance to similarity
-            sim_matrix = -dist_matrix / self.temperature
+        # Initialize loss
+        loss = torch.tensor(0.0, device=device, requires_grad=True)
+        valid_pairs = 0
 
-            # Create mask for positive pairs
-            pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()
-            pos_mask.fill_diagonal_(False)
+        for i in range(batch_size):
+            # Get positive samples
+            pos_indices = torch.where(pos_mask[i])[0]
+            if len(pos_indices) == 0:
+                continue
 
-            # Initialize loss components
-            losses = []
-            valid_pairs = 0
+            # Randomly select one positive
+            j = pos_indices[torch.randint(0, len(pos_indices), (1,))]
 
-            for i in range(batch_size):
-                pos_indices = torch.where(pos_mask[i])[0]
-                if len(pos_indices) == 0:
-                    continue
+            # Get negative samples
+            neg_mask = (labels != labels[i])
+            if not neg_mask.any():
+                continue
 
-                j = pos_indices[torch.randint(0, len(pos_indices), (1,))].item()
-                neg_mask = labels != labels[i]
+            # Compute loss for this pair
+            numerator = sim_matrix[i, j]
+            denominator = torch.logsumexp(sim_matrix[i, neg_mask], dim=0)
+            loss = loss + (- (numerator - denominator))
+            valid_pairs += 1
 
-                if not neg_mask.any():
-                    continue
+        if valid_pairs == 0:
+            return torch.tensor(0.0, device=device, requires_grad=True)
 
-                numerator = sim_matrix[i, j]
-                denominator = torch.logsumexp(sim_matrix[i, neg_mask], dim=0)
-                losses.append(- (numerator - denominator))
-                valid_pairs += 1
-
-            if valid_pairs == 0:
-                return torch.tensor(0.0, device=device, requires_grad=True)
-
-            # Stack all individual losses and compute mean
-            loss = torch.stack(losses).mean()
-            return loss
+        return loss / valid_pairs
 
 class DiversifyingMLP(nn.Module):
     def __init__(self, input_dim=2048, output_dim=10):
