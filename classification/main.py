@@ -61,7 +61,8 @@ mean_result_dict = {
                 f"AverageSetSize": 0,
                 f"Coverage": 0,
                 f"WorstClassCoverage": 0,
-                f"class_coverage_gap": 0.0
+                f"class_coverage_gap": 0.0,
+                f"SSCV": 0.0,
             }
 
 

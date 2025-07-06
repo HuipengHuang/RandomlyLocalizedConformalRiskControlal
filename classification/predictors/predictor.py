@@ -47,6 +47,9 @@ class Predictor:
         Output a dictionary containing Top1 Accuracy, Coverage and Average Prediction Set Size."""
         threshold = self.calibrate(cal_loader)
         num_classes = self.args.num_classes
+        set_size_coverage = torch.zeros(size=(self.args.num_classes,), device="cuda")
+        set_size_num = torch.zeros(size=(self.args.num_classes,), device="cuda")
+
         with torch.no_grad():
             total_accuracy = 0
             total_coverage = 0
@@ -68,6 +71,7 @@ class Predictor:
                 batch_score = self.score_function(prob)
                 prediction_set = (batch_score <= threshold).to(torch.int)
 
+
                 target_prediction_set = prediction_set[torch.arange(batch_size), target]
                 total_coverage += target_prediction_set.sum().item()
 
@@ -76,12 +80,18 @@ class Predictor:
                 for i in range(prediction_set.shape[0]):
                     class_coverage[target[i]] += prediction_set[i, target[i]].item()
                     class_size[target[i]] += 1
+                    set_size_coverage[torch.sum(prediction_set[i])] += prediction_set[i, target[i]].item()
+                    set_size_num[torch.sum(prediction_set[i])] += 1
 
 
             accuracy = total_accuracy / total_samples
             coverage = total_coverage / total_samples
             avg_set_size = total_prediction_set_size / total_samples
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
+
+            set_size_coverage = set_size_coverage / set_size_num
+            set_size_coverage_gap = abs(set_size_coverage - (1 - self.alpha))
+            sscv = torch.max(set_size_coverage_gap).item()
 
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
             result_dict = {
@@ -90,6 +100,7 @@ class Predictor:
                 f"Coverage": coverage,
                 f"WorstClassCoverage": np.min(class_coverage),
                 f"class_coverage_gap": class_coverage_gap,
+                f"SSCV": sscv
             }
 
         return result_dict, class_coverage, np.array(class_size)
