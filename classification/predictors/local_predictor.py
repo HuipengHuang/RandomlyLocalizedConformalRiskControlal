@@ -103,19 +103,19 @@ class RandomlyLocalizedPredictor:
 
             if self.args.dataset == "imagenet":
                 sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
-                sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / torch.sum(set_size_num[:2]).item()
+                sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / (torch.sum(set_size_num[:2]).item()+1e-6)
 
-                sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / torch.sum(set_size_num[2:4]).item()
+                sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / (torch.sum(set_size_num[2:4]).item()+1e-6)
 
-                sscv_list[2] += torch.sum(set_size_coverage[4:7]).item() / torch.sum(set_size_num[4:7]).item()
+                sscv_list[2] += torch.sum(set_size_coverage[4:7]).item() / (torch.sum(set_size_num[4:7]).item()+1e-6)
 
-                sscv_list[3] += torch.sum(set_size_coverage[7:11]).item() / torch.sum(set_size_num[7:11]).item()
+                sscv_list[3] += torch.sum(set_size_coverage[7:11]).item() / (torch.sum(set_size_num[7:11]).item()+1e-6)
 
-                sscv_list[4] += torch.sum(set_size_coverage[11:100]).item() / torch.sum(set_size_num[11:100]).item()
+                sscv_list[4] += torch.sum(set_size_coverage[11:100]).item() / (torch.sum(set_size_num[11:100]).item()+1e-6)
 
-                sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / torch.sum(set_size_num[100:]).item()
+                sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / (torch.sum(set_size_num[100:]).item()+1e-6)
 
-                sscv_list = abs(sscv_list - (1 - self.args.alpha))
+                sscv_list = abs(sscv_list[sscv_list!=0] - (1 - self.args.alpha))
                 sscv = torch.max(sscv_list).item()
             else:
                 raise NotImplementedError
