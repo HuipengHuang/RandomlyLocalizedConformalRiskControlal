@@ -23,7 +23,7 @@ class DiversifyingMLP(nn.Module):
             nn.Linear(512, output_dim)
         )
         nn.init.kaiming_normal_(self.net[0].weight, mode='fan_out', nonlinearity='relu')
-        nn.init.kaiming_normal_(self.net[2].weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.net[3].weight, mode='fan_out', nonlinearity='relu')
 
     def forward(self, x):
         return self.net(x)
