@@ -147,7 +147,6 @@ class DiversifyingMLP(nn.Module):
 
                 # Forward pass
                 embeddings = self(batch_features)
-                embeddings = F.normalize(embeddings, dim=1)  # L2-normalize for contrastive loss
 
                 # Compute loss
                 loss = criterion(embeddings, batch_labels)
