@@ -81,7 +81,8 @@ class RandomlyLocalizedPredictor:
                 torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), p, alpha=self.alpha)
 
             prediction_set = (test_score <= threshold.view(-1, 1)).to(torch.int)
-
+            print("haha")
+            print(prediction_set.shape)
             target_prediction_set = prediction_set[torch.arange(test_target.shape[0]), test_target]
             total_coverage += target_prediction_set.sum().item()
 
@@ -90,6 +91,7 @@ class RandomlyLocalizedPredictor:
             for i in range(prediction_set.shape[0]):
                 class_coverage[test_target[i]] += prediction_set[i, test_target[i]].item()
                 class_size[test_target[i]] += 1
+
                 set_size_coverage[torch.sum(prediction_set[i])] += prediction_set[i, target[i]].item()
                 set_size_num[torch.sum(prediction_set[i])] += 1
 
