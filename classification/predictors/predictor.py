@@ -89,9 +89,24 @@ class Predictor:
             avg_set_size = total_prediction_set_size / total_samples
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
 
-            set_size_coverage = set_size_coverage / (set_size_num + 1e-6)
-            set_size_coverage_gap = abs(set_size_coverage[set_size_num != 0] - (1 - self.alpha))
-            sscv = torch.max(set_size_coverage_gap).item()
+            if self.args.dataset == "imagenet":
+                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+                sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / torch.sum(set_size_num[:2]).item()
+
+                sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / torch.sum(set_size_num[2:4]).item()
+
+                sscv_list[2] += torch.sum(set_size_coverage[4:7]).item() / torch.sum(set_size_num[4:7]).item()
+
+                sscv_list[3] += torch.sum(set_size_coverage[7:11]).item() / torch.sum(set_size_num[7:11]).item()
+
+                sscv_list[4] += torch.sum(set_size_coverage[11:100]).item() / torch.sum(set_size_num[11:100]).item()
+
+                sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / torch.sum(set_size_num[100:]).item()
+
+                sscv_list = abs(sscv_list - (1 - self.args.alpha))
+                sscv = torch.max(sscv_list).item()
+            else:
+                raise NotImplementedError
 
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
             result_dict = {
