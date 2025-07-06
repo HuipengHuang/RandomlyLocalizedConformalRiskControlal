@@ -90,9 +90,7 @@ class RandomlyLocalizedPredictor:
             for i in range(prediction_set.shape[0]):
                 class_coverage[test_target[i]] += prediction_set[i, test_target[i]].item()
                 class_size[test_target[i]] += 1
-                print(set_size_coverage.shape)
-                print(prediction_set.shape)
-                print(torch.sum(prediction_set[i]))
+
                 set_size_coverage[torch.sum(prediction_set[i])] += prediction_set[i, target[i]].item()
                 set_size_num[torch.sum(prediction_set[i])] += 1
 
@@ -102,13 +100,23 @@ class RandomlyLocalizedPredictor:
             avg_set_size = total_prediction_set_size / total_samples
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
-            set_size_coverage = set_size_coverage / (set_size_num + 1e-6)
-            set_size_coverage_gap = abs(set_size_coverage[set_size_num != 0] - (1 - self.alpha))
+
             if self.args.dataset == "imagenet":
-                sscv_list = [0.0, 0.0, 0.0, 0.0]
-                sscv_list[0] += torch.sum(set_size_coverage_gap[:2]).item()
-                sscv_list[1] += torch.sum(set_size_coverage_gap[2:4]).item()
-                sscv = 0
+                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+                sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / torch.sum(set_size_num[:2]).item()
+
+                sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / torch.sum(set_size_num[2:4]).item()
+
+                sscv_list[2] += torch.sum(set_size_coverage[4:7]).item() / torch.sum(set_size_num[4:7]).item()
+
+                sscv_list[3] += torch.sum(set_size_coverage[7:11]).item() / torch.sum(set_size_num[7:11]).item()
+
+                sscv_list[4] += torch.sum(set_size_coverage[11:100]).item() / torch.sum(set_size_num[11:100]).item()
+
+                sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / torch.sum(set_size_num[100:]).item()
+
+                sscv_list = abs(sscv_list - (1 - self.args.alpha))
+                sscv = torch.max(sscv_list).item()
             else:
                 raise NotImplementedError
 
