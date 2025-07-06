@@ -145,7 +145,7 @@ class DiversifyingMLP(nn.Module):
         return self.net(x)
 
     def fit(self, features, labels, epochs=100, batch_size=32,
-            learning_rate=1e-3, loss_type="triplet", margin=1.0, temperature=0.1):
+            learning_rate=1e-3, loss_type="n_pair", margin=1.0, temperature=0.1):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self.to(device)
         features = features.to(device)

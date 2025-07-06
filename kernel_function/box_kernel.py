@@ -26,6 +26,7 @@ class BoxKernel(BaseKernelFunction):
 
         # Concatenate calibration and test distances
         # Shape: [batch_size, calibration_set_size + 1]
+        print(cal_feature.shape, test_distance.shape)
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
 
         # Box kernel: Indicator function (1 if distance <= 1, else 0)
