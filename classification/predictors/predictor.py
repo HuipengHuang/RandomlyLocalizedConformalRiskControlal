@@ -90,7 +90,7 @@ class Predictor:
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
 
             set_size_coverage = set_size_coverage / (set_size_num + 1e-6)
-            set_size_coverage_gap = abs(set_size_coverage[:1] - (1 - self.alpha))
+            set_size_coverage_gap = abs(set_size_coverage[set_size_num != 0] - (1 - self.alpha))
             sscv = torch.max(set_size_coverage_gap).item()
 
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
