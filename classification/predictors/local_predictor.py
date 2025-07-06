@@ -102,7 +102,7 @@ class RandomlyLocalizedPredictor:
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
 
             if self.args.dataset == "imagenet":
-                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
                 sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / torch.sum(set_size_num[:2]).item()
 
                 sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / torch.sum(set_size_num[2:4]).item()

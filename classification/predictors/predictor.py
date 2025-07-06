@@ -90,7 +90,7 @@ class Predictor:
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
 
             if self.args.dataset == "imagenet":
-                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+                sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
                 sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / torch.sum(set_size_num[:2]).item()
 
                 sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / torch.sum(set_size_num[2:4]).item()
