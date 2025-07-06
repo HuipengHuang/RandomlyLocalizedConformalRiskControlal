@@ -126,7 +126,7 @@ class RandomlyLocalizedPredictor:
                 f"Coverage": coverage,
                 f"WorstClassCoverage": np.min(class_coverage),
                 f"class_coverage_gap": class_coverage_gap,
-                f"SSCV": {sscv}
+                f"SSCV": sscv
             }
 
         return result_dict, class_coverage, np.array(class_size)
