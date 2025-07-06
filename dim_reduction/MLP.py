@@ -1,112 +1,188 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 import torch.optim as optim
-from pytorch_metric_learning import losses
-from torchvision import models, transforms
-from PIL import Image
+
+
+class TripletMarginLoss(nn.Module):
+    def __init__(self, margin=1.0, hard_mining=True):
+        super().__init__()
+        self.margin = margin
+        self.hard_mining = hard_mining
+
+    def forward(self, embeddings, labels):
+        """
+        Args:
+            embeddings: L2-normalized feature vectors [batch_size, feature_dim]
+            labels: Ground truth labels [batch_size]
+        Returns:
+            loss: Triplet loss with hard mining
+        """
+        pairwise_dist = torch.cdist(embeddings, embeddings, p=2)  # L2 distance matrix
+        pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()
+        neg_mask = (labels.unsqueeze(1) != labels.unsqueeze(0)).bool()
+
+        if self.hard_mining:
+            # Hardest positive (furthest within class)
+            pos_dist = pairwise_dist[pos_mask].view(len(labels), -1).max(dim=1)[0]
+
+            # Hardest negative (closest across classes)
+            neg_dist = pairwise_dist + (~neg_mask).float() * 1e6  # Mask non-negatives
+            neg_dist = neg_dist.min(dim=1)[0]
+        else:
+            # Random positive/negative (slower but more stable)
+            pos_dist = pairwise_dist[pos_mask].view(len(labels), -1).mean(dim=1)
+            neg_dist = pairwise_dist[neg_mask].view(len(labels), -1).mean(dim=1)
+
+        loss = F.relu(pos_dist - neg_dist + self.margin).mean()
+        return loss
+
+class SupConLoss(nn.Module):
+    """Supervised Contrastive Learning loss (Khosla et al., 2020)"""
+
+    def __init__(self, temperature=0.1):
+        super().__init__()
+        self.temperature = temperature
+
+    def forward(self, features, labels):
+        """
+        Args:
+            features: Normalized feature vectors [batch_size, feature_dim]
+            labels: Ground truth labels [batch_size]
+        """
+        device = features.device
+        batch_size = features.shape[0]
+
+        # Compute similarity matrix
+        features = F.normalize(features, dim=1)
+        sim_matrix = torch.matmul(features, features.T) / self.temperature
+
+        # Create mask for positives (same class, excluding self)
+        label_matrix = labels.unsqueeze(0) == labels.unsqueeze(1)  # [batch_size, batch_size]
+        pos_mask = label_matrix.fill_diagonal_(False)  # Exclude self-comparison
+
+        # Compute log-softmax
+        exp_sim = torch.exp(sim_matrix)
+        log_prob = torch.log(exp_sim * pos_mask + 1e-6) - torch.log(exp_sim.sum(dim=1, keepdim=True) + 1e-6)
+
+        # Sum over positives
+        loss = -log_prob[pos_mask].sum() / pos_mask.sum()
+
+        return loss
 
 
 
-device = "cuda"
+class NPairLoss(nn.Module):
+    """N-Pair Loss with L2 distance (Euclidean distance)."""
 
-# MLP for dimensionality reduction
+    def __init__(self, temperature=0.1):
+        super(NPairLoss, self).__init__()
+        self.temperature = temperature
+
+    def forward(self, embeddings, labels):
+        """
+        Args:
+            embeddings: Feature vectors [batch_size, feature_dim]
+            labels: Ground truth labels [batch_size]
+        Returns:
+            loss: PyTorch tensor with gradient tracking
+        """
+        device = embeddings.device
+        batch_size = embeddings.shape[0]
+
+        # L2 normalize embeddings
+        embeddings = F.normalize(embeddings, p=2, dim=1)
+
+        # Compute pairwise similarity matrix
+        sim_matrix = torch.matmul(embeddings, embeddings.t()) / self.temperature
+
+        # Create mask for positive pairs (same class, excluding self)
+        pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()
+        pos_mask.fill_diagonal_(False)
+
+        # Initialize loss
+        loss = torch.tensor(0.0, device=device, requires_grad=True)
+        valid_pairs = 0
+
+        for i in range(batch_size):
+            # Get positive samples
+            pos_indices = torch.where(pos_mask[i])[0]
+            if len(pos_indices) == 0:
+                continue
+
+            # Randomly select one positive
+            j = pos_indices[torch.randint(0, len(pos_indices), (1,))]
+
+            # Get negative samples
+            neg_mask = (labels != labels[i])
+            if not neg_mask.any():
+                continue
+
+            # Compute loss for this pair
+            numerator = sim_matrix[i, j]
+            denominator = torch.logsumexp(sim_matrix[i, neg_mask], dim=0)
+            loss = loss + (- (numerator - denominator))
+            valid_pairs += 1
+
+        if valid_pairs == 0:
+            return torch.tensor(0.0, device=device, requires_grad=True)
+
+        return loss / valid_pairs
+
 class DiversifyingMLP(nn.Module):
     def __init__(self, input_dim=2048, output_dim=10):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, 512),
             nn.ReLU(),
-            nn.Dropout(0.3),
             nn.Linear(512, output_dim)
         )
         nn.init.kaiming_normal_(self.net[0].weight, mode='fan_out', nonlinearity='relu')
-        nn.init.kaiming_normal_(self.net[3].weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.net[2].weight, mode='fan_out', nonlinearity='relu')
 
     def forward(self, x):
         return self.net(x)
 
-    def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, margin=0.2):
-        """
-        Train with triplet loss.
-
-        Args:
-            features: Tensor of ResNet features [n_samples, feature_dim]
-            labels: Tensor of labels [n_samples]
-            epochs: Number of training epochs
-            batch_size: Batch size for triplet training
-            learning_rate: Learning rate for Adam optimizer
-            margin: Margin for triplet loss
-        """
+    def fit(self, features, labels, epochs=100, batch_size=32,
+            learning_rate=1e-3, loss_type="triplet", margin=1.0, temperature=0.1):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.to(device)
         features = features.to(device)
         labels = labels.to(device)
 
-        criterion = losses.TripletMarginLoss(margin=margin)
+        # Initialize loss
+        if loss_type == "triplet":
+            criterion = TripletMarginLoss(margin=margin)
+        elif loss_type == "n_pair":
+            criterion = NPairLoss(temperature=temperature)
+        elif loss_type == "supcon":
+            criterion = SupConLoss(temperature=temperature)
+        else:
+            raise ValueError("loss_type must be 'triplet', 'n_pair', or 'supcon'")
+
         optimizer = optim.Adam(self.parameters(), lr=learning_rate, weight_decay=1e-5)
+        dataloader = DataLoader(TensorDataset(features, labels), batch_size=batch_size, shuffle=True)
 
-        # Select semi-hard triplets
-        def select_semi_hard_triplets(features, labels, num_triplets=1000):
-            triplets = []
-            for i in range(len(features)):
-                anchor = features[i]
-                anchor_label = labels[i]
-                pos_mask = (labels == anchor_label) & (torch.arange(len(labels), device=device) != i)
-                neg_mask = (labels != anchor_label)
-                pos_indices = torch.where(pos_mask)[0]
-                neg_indices = torch.where(neg_mask)[0]
-                if len(pos_indices) > 0 and len(neg_indices) > 0:
-                    pos_dist = torch.norm(features[pos_indices] - anchor, dim=1)
-                    neg_dist = torch.norm(features[neg_indices] - anchor, dim=1)
-                    valid_pos = pos_indices[pos_dist > torch.min(neg_dist) + margin]
-                    valid_neg = neg_indices[neg_dist < torch.max(pos_dist) - margin]
-                    if len(valid_pos) > 0 and len(valid_neg) > 0:
-                        hardest_pos = valid_pos[torch.argmax(pos_dist[valid_pos])]
-                        hardest_neg = valid_neg[torch.argmin(neg_dist[valid_neg])]
-                        triplets.append((i, hardest_pos, hardest_neg))
-            return triplets[:min(num_triplets, len(triplets))]
-
-        triplets = select_semi_hard_triplets(features, labels)
-        if not triplets:
-            raise ValueError("No valid triplets found. Check holdout dataset labels.")
-
-        triplet_dataset = TensorDataset(
-            torch.tensor([features[i] for i, _, _ in triplets], dtype=torch.float32),
-            torch.tensor([features[j] for _, j, _ in triplets], dtype=torch.float32),
-            torch.tensor([features[k] for _, _, k in triplets], dtype=torch.float32)
-        )
-        dataloader = DataLoader(triplet_dataset, batch_size=batch_size, shuffle=True)
-
-        self.train()
         for epoch in range(epochs):
-            total_loss = 0
-            for anchor, positive, negative in dataloader:
-                anchor, positive, negative = anchor.to(device), positive.to(device), negative.to(device)
-                anchor_out = self(anchor)
-                positive_out = self(positive)
-                negative_out = self(negative)
-                loss = criterion(anchor_out, positive_out, negative_out)
+            self.train()
+
+            for batch_features, batch_labels in dataloader:
+                batch_features = batch_features.to(device)
+                batch_labels = batch_labels.to(device)
+
+                # Forward pass + L2 normalization
+                embeddings = self(batch_features)
+                embeddings = F.normalize(embeddings, p=2, dim=1)  # Critical for triplet loss!
+
+                # Compute loss
+                loss = criterion(embeddings, batch_labels)
+
+                # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item()
-            print(f"Epoch {epoch + 1}, Loss: {total_loss / len(dataloader)}")
+
 
     def fit_transform(self, cal_feature, test_feature):
-        """
-        Transform calibration and test features using trained MLP.
-
-        Args:
-            cal_feature: Tensor of calibration features [n_cal, feature_dim]
-            test_feature: Tensor of test feature [feature_dim]
-        Returns:
-            cal_reduced: Reduced calibration features [n_cal, output_dim]
-            test_reduced: Reduced test feature [output_dim]
-        """
-        self.eval()
-        with torch.no_grad():
-            cal_reduced = self(cal_feature.to(device))
-            test_reduced = self(test_feature.to(device))
-        return cal_reduced, test_reduced
+        return self(cal_feature), self(test_feature)
