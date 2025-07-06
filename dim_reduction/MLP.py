@@ -1,112 +1,25 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 import torch.optim as optim
+from pytorch_metric_learning import losses
+from torchvision import models, transforms
+from PIL import Image
 
 
-class SupConLoss(nn.Module):
-    """Supervised Contrastive Learning loss (Khosla et al., 2020)"""
 
-    def __init__(self, temperature=0.1):
-        super().__init__()
-        self.temperature = temperature
+device = "cuda"
 
-    def forward(self, features, labels):
-        """
-        Args:
-            features: Normalized feature vectors [batch_size, feature_dim]
-            labels: Ground truth labels [batch_size]
-        """
-        device = features.device
-        batch_size = features.shape[0]
-
-        # Compute similarity matrix
-        features = F.normalize(features, dim=1)
-        sim_matrix = torch.matmul(features, features.T) / self.temperature
-
-        # Create mask for positives (same class, excluding self)
-        label_matrix = labels.unsqueeze(0) == labels.unsqueeze(1)  # [batch_size, batch_size]
-        pos_mask = label_matrix.fill_diagonal_(False)  # Exclude self-comparison
-
-        # Compute log-softmax
-        exp_sim = torch.exp(sim_matrix)
-        log_prob = torch.log(exp_sim * pos_mask + 1e-6) - torch.log(exp_sim.sum(dim=1, keepdim=True) + 1e-6)
-
-        # Sum over positives
-        loss = -log_prob[pos_mask].sum() / pos_mask.sum()
-
-        return loss
-
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-
-class NPairLoss(nn.Module):
-    """N-Pair Loss with L2 distance (Euclidean distance)."""
-
-    def __init__(self, temperature=0.1):
-        super(NPairLoss, self).__init__()
-        self.temperature = temperature
-
-    def forward(self, embeddings, labels):
-        """
-        Args:
-            embeddings: Feature vectors [batch_size, feature_dim]
-            labels: Ground truth labels [batch_size]
-        Returns:
-            loss: PyTorch tensor with gradient tracking
-        """
-        device = embeddings.device
-        batch_size = embeddings.shape[0]
-
-        # L2 normalize embeddings
-        embeddings = F.normalize(embeddings, p=2, dim=1)
-
-        # Compute pairwise similarity matrix
-        sim_matrix = torch.matmul(embeddings, embeddings.t()) / self.temperature
-
-        # Create mask for positive pairs (same class, excluding self)
-        pos_mask = (labels.unsqueeze(1) == labels.unsqueeze(0)).bool()
-        pos_mask.fill_diagonal_(False)
-
-        # Initialize loss
-        loss = torch.tensor(0.0, device=device, requires_grad=True)
-        valid_pairs = 0
-
-        for i in range(batch_size):
-            # Get positive samples
-            pos_indices = torch.where(pos_mask[i])[0]
-            if len(pos_indices) == 0:
-                continue
-
-            # Randomly select one positive
-            j = pos_indices[torch.randint(0, len(pos_indices), (1,))]
-
-            # Get negative samples
-            neg_mask = (labels != labels[i])
-            if not neg_mask.any():
-                continue
-
-            # Compute loss for this pair
-            numerator = sim_matrix[i, j]
-            denominator = torch.logsumexp(sim_matrix[i, neg_mask], dim=0)
-            loss = loss + (- (numerator - denominator))
-            valid_pairs += 1
-
-        if valid_pairs == 0:
-            return torch.tensor(0.0, device=device, requires_grad=True)
-
-        return loss / valid_pairs
-
+# MLP for dimensionality reduction
 class DiversifyingMLP(nn.Module):
     def __init__(self, input_dim=2048, output_dim=10):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, 512),
             nn.ReLU(),
+            nn.Dropout(0.3),
             nn.Linear(512, output_dim)
         )
         nn.init.kaiming_normal_(self.net[0].weight, mode='fan_out', nonlinearity='relu')
@@ -115,50 +28,72 @@ class DiversifyingMLP(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-    def fit(self, features, labels, epochs=100, batch_size=32, learning_rate=1e-3, loss_type="n_pair", temperature=0.1):
+    def fit(self, holdout_features, holdout_labels, epochs=100, batch_size=32, learning_rate=1e-3, margin=0.2):
         """
-        Train with either N-Pair Loss or SupCon Loss.
+        Train MLP with triplet loss on holdout dataset.
 
         Args:
-            loss_type: "n_pair" or "supcon"
-            temperature: Softmax temperature parameter
+            holdout_features: Tensor of ResNet features [n_samples, feature_dim]
+            holdout_labels: Tensor of labels [n_samples]
+            epochs: Number of training epochs
+            batch_size: Batch size for triplet training
+            learning_rate: Learning rate for Adam optimizer
+            margin: Margin for triplet loss
         """
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        features = features.to(device)
-        labels = labels.to(device)
-
-        # Initialize loss
-        if loss_type == "n_pair":
-            criterion = NPairLoss(temperature=temperature)
-        elif loss_type == "supcon":
-            criterion = SupConLoss(temperature=temperature)
-        else:
-            raise ValueError("loss_type must be 'n_pair' or 'supcon'")
-
+        criterion = losses.TripletMarginLoss(margin=margin)
         optimizer = optim.Adam(self.parameters(), lr=learning_rate, weight_decay=1e-5)
-        dataloader = DataLoader(TensorDataset(features, labels), batch_size=batch_size, shuffle=True)
 
+        # Select semi-hard triplets
+        def select_semi_hard_triplets(features, labels, num_triplets=1000):
+            triplets = []
+            features = features.cpu().numpy() if features.is_cuda else features.numpy()
+            labels = labels.cpu().numpy() if labels.is_cuda else labels.numpy()
+            for i in range(len(features)):
+                anchor = features[i]
+                anchor_label = labels[i]
+                pos_indices = np.where(labels == anchor_label)[0]
+                neg_indices = np.where(labels != anchor_label)[0]
+                pos_dist = np.linalg.norm(features[pos_indices] - anchor, axis=1)
+                neg_dist = np.linalg.norm(features[neg_indices] - anchor, axis=1)
+                if len(pos_dist) > 0 and len(neg_dist) > 0:
+                    valid_pos = pos_indices[pos_dist > np.min(neg_dist) + margin]
+                    valid_neg = neg_indices[neg_dist < np.max(pos_dist) - margin]
+                    if len(valid_pos) > 0 and len(valid_neg) > 0:
+                        hardest_pos = valid_pos[np.argmax(pos_dist[valid_pos])]
+                        hardest_neg = valid_neg[np.argmin(neg_dist[valid_neg])]
+                        triplets.append((i, hardest_pos, hardest_neg))
+            return triplets[:min(num_triplets, len(triplets))]
+
+        triplets = select_semi_hard_triplets(holdout_features, holdout_labels)
+        triplet_dataset = TensorDataset(
+            torch.tensor([holdout_features[i] for i, _, _ in triplets], dtype=torch.float32),
+            torch.tensor([holdout_features[j] for _, j, _ in triplets], dtype=torch.float32),
+            torch.tensor([holdout_features[k] for _, _, k in triplets], dtype=torch.float32)
+        )
+        dataloader = DataLoader(triplet_dataset, batch_size=batch_size, shuffle=True)
+
+        self.train()
         for epoch in range(epochs):
-            self.train()
-
-            for batch_features, batch_labels in dataloader:
-                batch_features = batch_features.to(device)
-                batch_labels = batch_labels.to(device)
-
-                # Forward pass
-                embeddings = self(batch_features)
-
-                # Compute loss
-                loss = criterion(embeddings, batch_labels)
-
-                # Backward pass
+            for anchor, positive, negative in dataloader:
+                anchor, positive, negative = anchor.to(device), positive.to(device), negative.to(device)
+                anchor_out = self(anchor)
+                positive_out = self(positive)
+                negative_out = self(negative)
+                loss = criterion(anchor_out, positive_out, negative_out)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
-
     def fit_transform(self, cal_feature, test_feature):
+        """
+        Transform calibration and test features using trained MLP.
+
+        Args:
+            cal_feature: Tensor of calibration features [n_cal, feature_dim]
+            test_feature: Tensor of test feature [feature_dim]
+        Returns:
+            cal_reduced: Reduced calibration features [n_cal, output_dim]
+            test_reduced: Reduced test feature [output_dim]
+        """
         return self(cal_feature), self(test_feature)
-
-
 

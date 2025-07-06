@@ -41,10 +41,9 @@ class BaseKernelFunction(ABC):
             Args:
                 cal_feature shape: [calibration_set_size, feature_dim], test_feature shape: [batch_size, feature_dim]
                 """
-        cal_feature, test_feature = cal_feature / torch.norm(cal_feature, dim=-1, keepdim=True), test_feature / torch.norm(test_feature, dim=-1, keepdim=True)
+        #cal_feature, test_feature = cal_feature / torch.norm(cal_feature, dim=-1, keepdim=True), test_feature / torch.norm(test_feature, dim=-1, keepdim=True)
         if self.dimension_reduction_tool is not None:
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
-        print(self.args.current_run)
 
         if self.args.current_run == 0:
             self.plot_feature_distance(cal_feature, test_feature)
