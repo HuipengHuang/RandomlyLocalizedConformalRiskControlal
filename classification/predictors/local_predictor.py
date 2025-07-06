@@ -91,11 +91,7 @@ class RandomlyLocalizedPredictor:
                 class_coverage[test_target[i]] += prediction_set[i, test_target[i]].item()
                 class_size[test_target[i]] += 1
 
-                print("haha")
-                print(torch.sum(prediction_set[i]).item())
-                print(prediction_set[i, target[i]].item())
-                print(set_size_coverage[torch.sum(prediction_set[i])])
-                set_size_coverage[torch.sum(prediction_set[i])] += prediction_set[i, target[i]].item()
+                set_size_coverage[torch.sum(prediction_set[i])] += prediction_set[i, test_target[i]].item()
                 set_size_num[torch.sum(prediction_set[i])] += 1
 
 
