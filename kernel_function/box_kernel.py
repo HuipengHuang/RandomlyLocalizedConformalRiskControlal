@@ -16,6 +16,7 @@ class BoxKernel(BaseKernelFunction):
 
         # Compute L2 distances between test features and sampled features
         # Shape: [batch_size, ]
+        print(test_feature.shape, sampled_features.shape)
         test_distance = torch.norm(test_feature - sampled_features, p=2, dim=-1) / (d * h)
 
         # Compute L2 distances between calibration features and sampled features
@@ -26,7 +27,6 @@ class BoxKernel(BaseKernelFunction):
 
         # Concatenate calibration and test distances
         # Shape: [batch_size, calibration_set_size + 1]
-        print(cal_feature.shape, test_distance.shape)
         l2 = torch.cat((cal_distance, test_distance.unsqueeze(dim=1)), dim=1)
 
         # Box kernel: Indicator function (1 if distance <= 1, else 0)
