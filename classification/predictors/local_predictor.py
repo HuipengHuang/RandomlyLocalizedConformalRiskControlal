@@ -50,8 +50,8 @@ class RandomlyLocalizedPredictor:
             class_coverage = [0 for i in range(num_classes)]
             class_size = [0 for i in range(num_classes)]
             total_samples = 0
-            set_size_coverage = torch.zeros(size=(self.args.num_classes, ), device="cuda")
-            set_size_num = torch.zeros(size=(self.args.num_classes, ), device="cuda")
+            set_size_coverage = torch.zeros(size=(self.args.num_classes+1, ), device="cuda")
+            set_size_num = torch.zeros(size=(self.args.num_classes+1, ), device="cuda")
 
             test_feature = torch.tensor([], device="cuda")
             test_target = torch.tensor([], device="cuda", dtype=torch.int)
@@ -99,8 +99,8 @@ class RandomlyLocalizedPredictor:
             avg_set_size = total_prediction_set_size / total_samples
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
-            set_size_coverage = set_size_coverage / set_size_num
-            set_size_coverage_gap = abs(set_size_coverage - (1 - self.alpha))
+            set_size_coverage = set_size_coverage / (set_size_num + 1e-6)
+            set_size_coverage_gap = abs(set_size_coverage[1:] - (1 - self.alpha))
             sscv = torch.max(set_size_coverage_gap).item()
 
             result_dict = {

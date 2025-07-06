@@ -47,8 +47,8 @@ class Predictor:
         Output a dictionary containing Top1 Accuracy, Coverage and Average Prediction Set Size."""
         threshold = self.calibrate(cal_loader)
         num_classes = self.args.num_classes
-        set_size_coverage = torch.zeros(size=(self.args.num_classes,), device="cuda")
-        set_size_num = torch.zeros(size=(self.args.num_classes,), device="cuda")
+        set_size_coverage = torch.zeros(size=(self.args.num_classes+1,), device="cuda")
+        set_size_num = torch.zeros(size=(self.args.num_classes+1,), device="cuda")
 
         with torch.no_grad():
             total_accuracy = 0
@@ -89,8 +89,8 @@ class Predictor:
             avg_set_size = total_prediction_set_size / total_samples
             class_coverage = np.array(class_coverage) / (np.array(class_size) + 1e-6)
 
-            set_size_coverage = set_size_coverage / set_size_num
-            set_size_coverage_gap = abs(set_size_coverage - (1 - self.alpha))
+            set_size_coverage = set_size_coverage / (set_size_num + 1e-6)
+            set_size_coverage_gap = abs(set_size_coverage[:1] - (1 - self.alpha))
             sscv = torch.max(set_size_coverage_gap).item()
 
             class_coverage_gap = np.sum(np.abs(class_coverage - (1 - self.alpha))) / num_classes
