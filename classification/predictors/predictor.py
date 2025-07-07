@@ -103,8 +103,8 @@ class Predictor:
 
                 sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / (torch.sum(set_size_num[100:]).item()+1e-6)
 
-                sscv_list = abs(sscv_list[sscv_list!=0] - (1 - self.args.alpha))
-                sscv = torch.max(sscv_list).item()
+                sscv_list = abs(sscv_list - (1 - self.args.alpha))
+                sscv = torch.max(sscv_list[sscv_list != (1 - self.args.alpha)]).item()
             else:
                 raise NotImplementedError
 
