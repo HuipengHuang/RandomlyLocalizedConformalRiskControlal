@@ -91,7 +91,7 @@ class Predictor:
 
             if self.args.dataset == "imagenet":
                 sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
-                my_set_size_num = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+                my_set_size_num = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
 
                 sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / (torch.sum(set_size_num[:2]).item() + 1e-6)
                 my_set_size_num[0] = torch.sum(set_size_num[:2]).item()
