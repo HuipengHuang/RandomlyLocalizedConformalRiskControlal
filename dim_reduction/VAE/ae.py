@@ -13,10 +13,10 @@ class AutoEncoder(nn.Module):
 
         # Encoder
         self.encoder = nn.Sequential(
-            nn.Linear(input_dim, 256),
+            nn.Linear(input_dim, 512),
             nn.Dropout(0.2),
             nn.GELU(),
-            nn.Linear(256, 256),
+            nn.Linear(512, 256),
             nn.Dropout(0.2),
             nn.GELU(),
             nn.Linear(256, latent_dim)  # Directly output latent representation
@@ -27,10 +27,10 @@ class AutoEncoder(nn.Module):
             nn.Linear(latent_dim, 256),
             nn.Dropout(0.2),
             nn.GELU(),
-            nn.Linear(256, 256),
+            nn.Linear(256, 512),
             nn.Dropout(0.2),
             nn.GELU(),
-            nn.Linear(256, input_dim)
+            nn.Linear(512, input_dim)
         )
 
         """self.encoder = nn.Sequential(
