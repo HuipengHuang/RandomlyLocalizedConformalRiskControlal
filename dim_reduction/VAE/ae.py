@@ -63,7 +63,8 @@ class AutoEncoder(nn.Module):
             self.train()
             for batch in train_loader:
                 batch = batch[0]
-                noisy_batch = self.add_noise(batch)
+                #noisy_batch = self.add_noise(batch)
+                noisy_batch = batch
                 recon = self.forward(noisy_batch)
 
                 # MSE reconstruction loss
@@ -71,5 +72,5 @@ class AutoEncoder(nn.Module):
 
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)
+                #torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)
                 optimizer.step()
