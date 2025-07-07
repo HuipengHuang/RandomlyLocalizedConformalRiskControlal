@@ -64,6 +64,7 @@ mean_result_dict = {
                 f"class_coverage_gap": 0.0,
                 f"SSCV": 0.0,
                 f"SSCV_list": torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda"),
+                f"SetSizeNum": torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
             }
 
 

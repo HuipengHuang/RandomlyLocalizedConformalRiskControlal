@@ -103,17 +103,26 @@ class RandomlyLocalizedPredictor:
 
             if self.args.dataset == "imagenet":
                 sscv_list = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+
+                my_set_size_num = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device="cuda")
+
                 sscv_list[0] += torch.sum(set_size_coverage[:2]).item() / (torch.sum(set_size_num[:2]).item()+1e-6)
+                my_set_size_num[0] = torch.sum(set_size_num[:2]).item()
 
                 sscv_list[1] += torch.sum(set_size_coverage[2:4]).item() / (torch.sum(set_size_num[2:4]).item()+1e-6)
+                my_set_size_num[1] = torch.sum(set_size_num[2:4]).item()
 
                 sscv_list[2] += torch.sum(set_size_coverage[4:7]).item() / (torch.sum(set_size_num[4:7]).item()+1e-6)
+                my_set_size_num[2] = torch.sum(set_size_num[4:7]).item()
 
                 sscv_list[3] += torch.sum(set_size_coverage[7:11]).item() / (torch.sum(set_size_num[7:11]).item()+1e-6)
+                my_set_size_num[3] = torch.sum(set_size_num[7:11]).item()
 
                 sscv_list[4] += torch.sum(set_size_coverage[11:100]).item() / (torch.sum(set_size_num[11:100]).item()+1e-6)
+                my_set_size_num[4] = torch.sum(set_size_num[11:100]).item()
 
                 sscv_list[5] += torch.sum(set_size_coverage[100:]).item() / (torch.sum(set_size_num[100:]).item()+1e-6)
+                my_set_size_num[5] = torch.sum(set_size_num[100:]).item()
 
                 sscv_list = abs(sscv_list - (1 - self.args.alpha))
                 sscv = torch.max(sscv_list[sscv_list != (1 - self.args.alpha)]).item()
@@ -127,7 +136,8 @@ class RandomlyLocalizedPredictor:
                 f"WorstClassCoverage": np.min(class_coverage),
                 f"class_coverage_gap": class_coverage_gap,
                 f"SSCV": sscv,
-                f"SSCV_list": sscv_list
+                f"SSCV_list": sscv_list,
+                f"SetSizeNum": my_set_size_num,
             }
 
         return result_dict, class_coverage, np.array(class_size)
