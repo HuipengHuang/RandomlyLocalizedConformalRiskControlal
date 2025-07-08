@@ -38,7 +38,7 @@ class BaseKernelFunction(ABC):
     def calculate_weight(self, cal_feature, test_feature, sampled_features, d):
         pass
 
-    def get_p(self, cal_feature, test_feature, cal_target, test_target):
+    def get_p(self, cal_feature, test_feature, test_score, test_target):
         """
             Args:
                 cal_feature shape: [calibration_set_size, feature_dim], test_feature shape: [batch_size, feature_dim]
@@ -48,7 +48,7 @@ class BaseKernelFunction(ABC):
                 cal_feature, test_feature = self.fit_transform(cal_feature, test_feature)
 
         if self.args.plot == "True" and self.args.current_run == 0:
-            plot_feature_distance(self.args, cal_feature, test_feature, cal_target, test_target)
+            plot_feature_distance(self.args, cal_feature, test_feature, test_score, test_target)
 
         d = test_feature.shape[1]
 
@@ -175,9 +175,11 @@ def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
     # Handle numerical stability
     return dist_sq
 
-def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test_target=None):
-    if cal_target is not None and test_target is not None:
-        plot_class_distance(cal_feature, test_feature, cal_target, test_target)
+def plot_feature_distance(args, cal_feature, test_feature, test_score=None, test_target=None):
+    if args.plot_class == "True":
+        plot_class_distance(test_feature,test_target)
+    if args.plot_similar_threshold == "True":
+        plot_similar_threshold_distance(test_feature, test_score)
 
     d = test_feature.shape[1]
     cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
@@ -198,11 +200,39 @@ def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test
     plt.savefig(path)
     plt.show()
 
+def plot_similar_threshold_distance(feature, score):
+    target = score_to_label(score)
+    plot_class_distance(feature, target)
 
-def plot_class_distance(cal_feature, test_feature, cal_target, test_target):
-    feature = torch.cat((cal_feature, test_feature), dim=0)
-    target = torch.cat((cal_target, test_target), dim=0)
-    feature, target = cal_feature, cal_target
+
+def score_to_label(score):
+  
+    # Initialize output tensor with default label 2
+    labels = torch.full_like(score, fill_value=4, dtype=torch.long)
+
+    # Mask for label 0 (0.95 <= x <= 1.0)
+    mask_label0 = (score >= 0.0) & (score <= 0.05)
+    labels[mask_label0] = 0
+
+    # Mask for label 1 (0.6 <= x <= 0.7)
+    mask_label1 = (score > 0.05) & (score <= 0.1)
+    labels[mask_label1] = 1
+
+    mask_label1 = (score > 0.1) & (score <= 0.2)
+    labels[mask_label1] = 2
+
+    mask_label1 = (score > 0.2) & (score <= 0.4)
+    labels[mask_label1] = 3
+
+    mask_label1 = (score > 0.4) & (score <= 0.7)
+    labels[mask_label1] = 3
+
+    return labels
+
+def plot_class_distance(test_feature, test_target):
+    #feature = torch.cat((cal_feature, test_feature), dim=0)
+    #target = torch.cat((cal_target, test_target), dim=0)
+    feature, target = test_feature, test_target
 
     distances = batched_pairwise_dist(feature)
 
