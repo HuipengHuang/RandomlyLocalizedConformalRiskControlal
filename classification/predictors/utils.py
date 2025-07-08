@@ -4,6 +4,44 @@ import seaborn as sns
 import os
 
 
+def batched_pairwise_dist(feature, batch_size=5000, device='cuda'):
+    """
+    Compute pairwise squared distances in batches to avoid OOM errors
+
+    Args:
+        feature: Tensor of shape [n, d]
+        batch_size: Number of rows to process at once
+        device: Device to compute on
+
+    Returns:
+        dist_sq: Squared distance matrix of shape [n, n]
+    """
+    n = feature.shape[0]
+    dist_sq = torch.zeros((n, n), device=device)
+
+    # Pre-compute squared norms for all features
+    feature_sqnorms = torch.sum(feature ** 2, dim=1)  # Shape [n]
+
+    # Process in batches
+    for i in range(0, n, batch_size):
+        batch_end = min(i + batch_size, n)
+        batch_features = feature[i:batch_end]
+
+        # Compute dot product for current batch
+        batch_dot = batch_features @ feature.T  # Shape [batch_size, n]
+
+        # Compute squared distances for current batch
+        batch_dist_sq = (feature_sqnorms[i:batch_end, None] -
+                         2 * batch_dot +
+                         feature_sqnorms[None, :])
+
+        # Store results
+        dist_sq[i:batch_end] = batch_dist_sq
+
+    # Handle numerical stability
+    dist_sq = torch.clamp(dist_sq, min=0.0)
+    return dist_sq
+
 def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test_target=None):
     if cal_target is not None and test_target is not None:
         plot_class_distance(cal_feature, test_feature, cal_target, test_target)
@@ -32,17 +70,8 @@ def plot_class_distance(cal_feature, test_feature, cal_target, test_target):
     feature = torch.cat((cal_feature, test_feature), dim=0)
     target = torch.cat((cal_target, test_target), dim=0)
 
-    feature_sqnorms = torch.sum(feature ** 2, dim=1)
 
-    # Compute dot products between all vectors [n, n]
-    feature_dot = feature @ feature.T
-
-    # Compute squared distances: ||x_i - x_j||^2 = ||x_i||^2 - 2<x_i,x_j> + ||x_j||^2
-    # Using broadcasting: x_sqnorms[:, None] is [n,1] and x_sqnorms[None, :] is [1,n]
-    dist_sq = feature_sqnorms[:, None] - 2 * feature_dot + feature_sqnorms[None, :]
-
-    # Handle numerical errors from negative values (due to floating point)
-    dist_sq = torch.clamp(dist_sq, min=0.0)
+    dist_sq = batched_pairwise_dist(feature)
 
     distances = torch.sqrt(dist_sq)
     distance_of_same_class = []
