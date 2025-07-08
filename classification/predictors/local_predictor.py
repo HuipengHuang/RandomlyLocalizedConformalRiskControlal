@@ -76,7 +76,7 @@ class RandomlyLocalizedPredictor:
 
 
 
-            p = self.kernel_function.get_p(cal_feature, test_feature)
+            p = self.kernel_function.get_p(cal_feature, test_feature, cal_target, test_target)
 
             threshold = self.get_weighted_quantile(
                 torch.cat((cal_score, torch.tensor([1.0], device="cuda")), dim=0), p, alpha=self.alpha)
