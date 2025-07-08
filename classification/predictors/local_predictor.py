@@ -1,5 +1,4 @@
 import os.path
-from .utils import plot_feature_distance
 import numpy as np
 from classification.scores.utils import get_score
 import torch
