@@ -5,27 +5,28 @@ import os
 
 
 def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test_target=None):
-    if cal_target is None and test_target is None:
-        d = test_feature.shape[1]
-        cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
-        for i in range(test_feature.shape[0]):
-            cal_distance[i] = torch.sum(((cal_feature - test_feature[i]) / d) ** 2, dim=-1) ** (0.5)
-        min_val = torch.min(cal_distance)
-        max_val = torch.max(cal_distance)
-        normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
+    if cal_target is not None and test_target is not None:
+        plot_class_distance(cal_feature, test_feature, cal_target, test_target)
 
-        plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
-        i = 0
+    d = test_feature.shape[1]
+    cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
+    for i in range(test_feature.shape[0]):
+        cal_distance[i] = torch.sum(((cal_feature - test_feature[i]) / d) ** 2, dim=-1) ** (0.5)
+    min_val = torch.min(cal_distance)
+    max_val = torch.max(cal_distance)
+    normalized_distance = (cal_distance - min_val) / (max_val - min_val + 1e-8)
+
+    plt.hist(normalized_distance.view(-1).cpu().numpy(), bins=100)
+    i = 0
+    path = f"./plot_results/distance{i}.pdf"
+
+    while os.path.exists(path):
+        i += 1
         path = f"./plot_results/distance{i}.pdf"
 
-        while os.path.exists(path):
-            i += 1
-            path = f"./plot_results/distance{i}.pdf"
+    plt.savefig(path)
+    plt.show()
 
-        plt.savefig(path)
-        plt.show()
-    else:
-        plot_class_distance(cal_feature, test_feature, cal_target, test_target)
 
 def plot_class_distance(cal_feature, test_feature, cal_target, test_target):
     feature = torch.cat((cal_feature, test_feature), dim=0)
