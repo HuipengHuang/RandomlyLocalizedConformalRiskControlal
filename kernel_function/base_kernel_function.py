@@ -269,6 +269,13 @@ def plot_class_distance(test_feature, test_target):
 
     plt.figure(figsize=(10, 6))
 
+    plt.hist(normalized_diff.cpu().numpy(),
+             bins=100,
+             alpha=0.6,
+             color='red',
+             density=True,
+             label='Different Class')
+
     # Plot histograms with different colors and transparency
     plt.hist(normalized_same.cpu().numpy(),
              bins=100,
@@ -276,13 +283,6 @@ def plot_class_distance(test_feature, test_target):
              color='blue',
              density=True,
              label='Same Class')
-
-    plt.hist(normalized_diff.cpu().numpy(),
-             bins=100,
-             alpha=0.6,
-             color='red',
-             density=True,
-             label='Different Class')
 
     # Add plot decorations
     plt.xlabel('Normalized Distance', fontsize=12)
