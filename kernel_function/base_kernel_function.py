@@ -202,7 +202,7 @@ def plot_feature_distance(args, cal_feature, test_feature, test_score=None, test
 
 def plot_similar_threshold_distance(feature, score):
     target = score_to_label(score)
-    plot_class_distance(feature, target)
+    plot_class_distance(feature, target, name="threshold")
 
 
 def score_to_label(score):
@@ -229,7 +229,7 @@ def score_to_label(score):
 
     return labels
 
-def plot_class_distance(test_feature, test_target):
+def plot_class_distance(test_feature, test_target, name="class"):
     #feature = torch.cat((cal_feature, test_feature), dim=0)
     #target = torch.cat((cal_target, test_target), dim=0)
     feature, target = test_feature, test_target
@@ -274,7 +274,7 @@ def plot_class_distance(test_feature, test_target):
              alpha=0.6,
              color='red',
              density=True,
-             label='Different Class')
+             label=f'Different {name}')
 
     # Plot histograms with different colors and transparency
     plt.hist(normalized_same.cpu().numpy(),
@@ -282,20 +282,20 @@ def plot_class_distance(test_feature, test_target):
              alpha=0.6,
              color='blue',
              density=True,
-             label='Same Class')
+             label=f'Same {name}')
 
     # Add plot decorations
     plt.xlabel('Normalized Distance', fontsize=12)
     plt.ylabel('Density', fontsize=12)
-    plt.title('Distribution of Normalized Distances by Class Relationship', fontsize=14)
+    plt.title(f'Distribution of Normalized Distances by {name} Relationship', fontsize=14)
     plt.legend(fontsize=12)
     plt.tight_layout()
     i = 0
-    path = f"./plot_results/class_distance{i}.pdf"
+    path = f"./plot_results/{name}_distance{i}.pdf"
 
     while os.path.exists(path):
         i += 1
-        path = f"./plot_results/class_distance{i}.pdf"
+        path = f"./plot_results/{name}_distance{i}.pdf"
 
     plt.savefig(path)
 
