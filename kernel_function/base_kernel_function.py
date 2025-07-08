@@ -269,8 +269,8 @@ def plot_class_distance(args, test_feature, test_target, name="class"):
     normalized_same = (distance_of_same_class - min_value) / (max_value - min_value)
     normalized_diff = (distance_of_different_class - min_value) / (max_value - min_value)
 
-    normalized_same = normalized_same[normalized_same >= 0 and normalized_same <= 1]
-    normalized_diff = normalized_diff[normalized_diff >= 0 and normalized_diff <= 1]
+    normalized_same = normalized_same[(normalized_same >= 0) & (normalized_same <= 1)]
+    normalized_diff = normalized_diff[(normalized_diff >= 0) & (normalized_diff <= 1)]
 
     plt.figure(figsize=(10, 6))
 
