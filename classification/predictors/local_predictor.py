@@ -1,5 +1,5 @@
 import os.path
-
+from .utils import plot_feature_distance
 import numpy as np
 from classification.scores.utils import get_score
 import torch
@@ -74,6 +74,9 @@ class RandomlyLocalizedPredictor:
             total_accuracy = torch.sum(torch.argmax(test_prob, dim=-1) == test_target)
 
             test_score = self.score_function(test_prob)
+
+            if self.args.plot == "True" and self.args.num_runs == 0:
+                plot_feature_distance(self.args, cal_feature, test_feature, cal_target, test_target)
 
             p = self.kernel_function.get_p(cal_feature, test_feature)
 
