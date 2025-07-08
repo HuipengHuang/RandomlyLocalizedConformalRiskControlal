@@ -177,8 +177,10 @@ def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
 
 def plot_feature_distance(args, cal_feature, test_feature, test_score=None, test_target=None):
     if args.plot_class == "True":
-        plot_class_distance(test_feature,test_target)
+        print("Ploting class distance")
+        plot_class_distance(test_feature, test_target)
     if args.plot_similar_threshold == "True":
+        print("Ploting similar threshold distance")
         plot_similar_threshold_distance(test_feature, test_score)
 
     d = test_feature.shape[1]
