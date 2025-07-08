@@ -170,10 +170,9 @@ def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
                          feature_sqnorms[None, :])
 
         # Store results
-        dist_sq[i:batch_end] = batch_dist_sq
+        dist_sq[i:batch_end] = (batch_dist_sq + 1e-6) ** 0.5
 
     # Handle numerical stability
-    dist_sq += 1e-6
     return dist_sq
 
 def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test_target=None):
@@ -205,9 +204,8 @@ def plot_class_distance(cal_feature, test_feature, cal_target, test_target):
     target = torch.cat((cal_target, test_target), dim=0)
 
 
-    dist_sq = batched_pairwise_dist(feature)
+    distances = batched_pairwise_dist(feature)
 
-    distances = torch.sqrt(dist_sq)
     distance_of_same_class = []
     distance_of_different_class = []
     unique_classes = torch.unique(target)
