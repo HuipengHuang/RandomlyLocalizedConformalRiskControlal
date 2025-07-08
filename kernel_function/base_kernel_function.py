@@ -231,7 +231,7 @@ def score_to_label(score):
 
     return labels
 
-def plot_class_distance(test_feature, test_target, name="class"):
+def plot_class_distance(args, test_feature, test_target, name="class"):
     #feature = torch.cat((cal_feature, test_feature), dim=0)
     #target = torch.cat((cal_target, test_target), dim=0)
     feature, target = test_feature, test_target
@@ -293,11 +293,16 @@ def plot_class_distance(test_feature, test_target, name="class"):
     plt.legend(fontsize=12)
     plt.tight_layout()
     i = 0
-    path = f"./plot_results/{name}_distance{i}.pdf"
+    base_name = f"_{name}_distance"
+    if args.pca:
+        base_name = args.pca + base_name
+    if args.vae:
+        base_name = args.vae + base_name
+    path = f"./plot_results/{base_name}{i}.pdf"
 
     while os.path.exists(path):
         i += 1
-        path = f"./plot_results/{name}_distance{i}.pdf"
+        path = f"./plot_results/{base_name}{i}.pdf"
 
     plt.savefig(path)
 
