@@ -130,6 +130,47 @@ class NPairLoss(nn.Module):
 
         return loss / valid_pairs
 
+
+class ContrastiveMSELoss(nn.Module):
+    def __init__(self, margin=1.0, same_class_weight=1.0, diff_class_weight=1.0):
+        super(ContrastiveMSELoss, self).__init__()
+        self.margin = margin  # Minimum desired distance between different classes
+        self.same_class_weight = same_class_weight  # Weight for same-class penalty
+        self.diff_class_weight = diff_class_weight  # Weight for different-class penalty
+
+    def forward(self, embeddings, labels):
+        """
+        Args:
+            embeddings: Tensor of shape (batch_size, embedding_dim)
+            labels: Tensor of shape (batch_size,)
+        Returns:
+            loss: Contrastive MSE loss
+        """
+        batch_size = embeddings.size(0)
+
+        # Compute pairwise L2 distances (Euclidean distance)
+        pairwise_dist = torch.cdist(embeddings, embeddings, p=2)  # [batch_size, batch_size]
+
+        # Create mask for same-class and different-class pairs
+        label_matrix = labels.unsqueeze(0) == labels.unsqueeze(1)  # [batch_size, batch_size]
+        same_class_mask = torch.triu(label_matrix, diagonal=1)  # Upper triangular to avoid duplicates
+        diff_class_mask = torch.triu(~label_matrix, diagonal=1)  # Upper triangular for different classes
+
+        # Get distances for same-class and different-class pairs
+        same_class_dist = pairwise_dist[same_class_mask]
+        diff_class_dist = pairwise_dist[diff_class_mask]
+
+        # Loss for same-class pairs (minimize distance → MSE)
+        same_class_loss = torch.mean(same_class_dist ** 2) if len(same_class_dist) > 0 else 0.0
+
+        # Loss for different-class pairs (maximize distance → hinge-like penalty)
+        diff_class_loss = torch.mean(F.relu(self.margin - diff_class_dist) ** 2) if len(diff_class_dist) > 0 else 0.0
+
+        # Total loss (weighted combination)
+        loss = (self.same_class_weight * same_class_loss) + (self.diff_class_weight * diff_class_loss)
+
+        return loss
+
 class DiversifyingMLP(nn.Module):
     def __init__(self, input_dim=2048, output_dim=10):
         super().__init__()
@@ -145,7 +186,7 @@ class DiversifyingMLP(nn.Module):
         return self.net(x)
 
     def fit(self, features, labels, epochs=100, batch_size=32,
-            learning_rate=1e-3, loss_type="n_pair", margin=1.0, temperature=0.1):
+            learning_rate=1e-3, loss_type="mse", margin=1.0, temperature=0.1):
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self.to(device)
         features = features.to(device)
@@ -158,6 +199,8 @@ class DiversifyingMLP(nn.Module):
             criterion = NPairLoss(temperature=temperature)
         elif loss_type == "supcon":
             criterion = SupConLoss(temperature=temperature)
+        elif loss_type == "mse":
+            criterion = ContrastiveMSELoss()
         else:
             raise ValueError("loss_type must be 'triplet', 'n_pair', or 'supcon'")
 
@@ -173,9 +216,7 @@ class DiversifyingMLP(nn.Module):
 
                 # Forward pass + L2 normalization
                 embeddings = self(batch_features)
-                embeddings = F.normalize(embeddings, p=2, dim=1)  # Critical for triplet loss!
 
-                # Compute loss
                 loss = criterion(embeddings, batch_labels)
 
                 # Backward pass
