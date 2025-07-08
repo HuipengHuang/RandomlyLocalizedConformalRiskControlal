@@ -178,10 +178,10 @@ def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
 def plot_feature_distance(args, cal_feature, test_feature, test_score=None, test_target=None):
     if args.plot_class == "True":
         print("Ploting class distance")
-        plot_class_distance(test_feature, test_target)
+        plot_class_distance(args, test_feature, test_target)
     if args.plot_similar_threshold == "True":
         print("Ploting similar threshold distance")
-        plot_similar_threshold_distance(test_feature, test_score)
+        plot_similar_threshold_distance(args, test_feature, test_score)
 
     d = test_feature.shape[1]
     cal_distance = torch.zeros(size=(test_feature.shape[0], cal_feature.shape[0]), device="cuda")
@@ -202,9 +202,9 @@ def plot_feature_distance(args, cal_feature, test_feature, test_score=None, test
     plt.savefig(path)
     plt.show()
 
-def plot_similar_threshold_distance(feature, score):
+def plot_similar_threshold_distance(args, feature, score):
     target = score_to_label(score)
-    plot_class_distance(feature, target, name="threshold")
+    plot_class_distance(args, feature, target, name="threshold")
 
 
 def score_to_label(score):
