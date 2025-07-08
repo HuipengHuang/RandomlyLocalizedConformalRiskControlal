@@ -138,7 +138,7 @@ class BaseKernelFunction(ABC):
         pass
 
 
-def batched_pairwise_dist(feature, batch_size=5000, device='cuda'):
+def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
     """
     Compute pairwise squared distances in batches to avoid OOM errors
 
