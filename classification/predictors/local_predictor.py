@@ -75,8 +75,7 @@ class RandomlyLocalizedPredictor:
 
             test_score = self.score_function(test_prob)
 
-            if self.args.plot == "True" and self.args.current_run == 0:
-                plot_feature_distance(self.args, cal_feature, test_feature, cal_target, test_target)
+
 
             p = self.kernel_function.get_p(cal_feature, test_feature)
 
