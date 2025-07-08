@@ -202,7 +202,7 @@ def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test
 def plot_class_distance(cal_feature, test_feature, cal_target, test_target):
     feature = torch.cat((cal_feature, test_feature), dim=0)
     target = torch.cat((cal_target, test_target), dim=0)
-
+    feature, target = cal_feature, cal_target
 
     distances = batched_pairwise_dist(feature)
 
