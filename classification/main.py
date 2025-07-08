@@ -26,6 +26,8 @@ parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
 parser.add_argument("--num_runs", default=1, type=int)
 parser.add_argument("--num_workers", default=4, type=int)
 parser.add_argument("--plot", default="True", choices=["True", "False"])
+parser.add_argument("--plot_class", default="True", choices=["True", "False"])
+parser.add_argument("--plot_similar_threshold", default="True", choices=["True", "False"])
 parser.add_argument("--output_dir", default="./plot_results/")
 #  Hyperpatameters for Conformal Prediction
 parser.add_argument("--alpha", type=float, default=0.1, help="Error Rate")
