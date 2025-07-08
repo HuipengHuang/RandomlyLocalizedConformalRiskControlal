@@ -167,7 +167,7 @@ class ContrastiveMSELoss(nn.Module):
         diff_class_loss = torch.mean(F.relu(self.margin - diff_class_dist) ** 2) if len(diff_class_dist) > 0 else 0.0
 
         # Total loss (weighted combination)
-        loss = (self.same_class_weight * same_class_loss) + (self.diff_class_weight * diff_class_loss)
+        loss = (self.same_class_weight * same_class_loss) - (self.diff_class_weight * diff_class_loss)
 
         return loss
 
