@@ -74,7 +74,8 @@ class RandomlyLocalizedPredictor:
             total_accuracy = torch.sum(torch.argmax(test_prob, dim=-1) == test_target)
 
             test_score = self.score_function(test_prob)
-
+            print("haha")
+            print(self.args.plot, self.args.num_runs)
             if self.args.plot == "True" and self.args.num_runs == 0:
                 plot_feature_distance(self.args, cal_feature, test_feature, cal_target, test_target)
 
