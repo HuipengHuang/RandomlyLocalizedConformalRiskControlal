@@ -173,7 +173,7 @@ def batched_pairwise_dist(feature, batch_size=1000, device='cuda'):
         dist_sq[i:batch_end] = batch_dist_sq
 
     # Handle numerical stability
-    dist_sq = torch.clamp(dist_sq, min=0.0)
+    dist_sq += 1e-6
     return dist_sq
 
 def plot_feature_distance(args, cal_feature, test_feature, cal_target=None, test_target=None):
