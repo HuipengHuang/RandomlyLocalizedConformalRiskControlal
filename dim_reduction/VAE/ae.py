@@ -12,24 +12,24 @@ class AutoEncoder(nn.Module):
         print(f"input dimension:{input_dim}")
 
         # Encoder
-        """self.encoder = nn.Sequential(
+        self.encoder = nn.Sequential(
             nn.Linear(input_dim, 128),
             nn.GELU(),
-            nn.Linear(128, 64),
+            nn.Linear(128, 32),
             nn.GELU(),
-            nn.Linear(64, latent_dim)  # Directly output latent representation
+            nn.Linear(32, latent_dim)  # Directly output latent representation
         )
 
         # Decoder (no final activation)
         self.decoder = nn.Sequential(
-            nn.Linear(latent_dim, 64),
+            nn.Linear(latent_dim, 32),
             nn.GELU(),
-            nn.Linear(64, 128),
+            nn.Linear(32, 128),
             nn.GELU(),
             nn.Linear(128, input_dim)
-        )"""
+        )
 
-        self.encoder = nn.Sequential(
+        """self.encoder = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
             nn.Linear(256, latent_dim),
@@ -40,7 +40,7 @@ class AutoEncoder(nn.Module):
             nn.Linear(latent_dim, 256),
             nn.ReLU(),
             nn.Linear(256, input_dim),
-        )
+        )"""
     def encode(self, x):
         return self.encoder(x)
 
