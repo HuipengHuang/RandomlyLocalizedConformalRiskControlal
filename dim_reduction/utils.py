@@ -23,6 +23,7 @@ def get_dimension_reduction_tool(args, holdout_feature, holdout_target):
 
     if args.nf == "True":
         NF = NormalizingFlow(input_dim=holdout_feature.shape[1],)
+        NF.to("cuda")
         NF.fit(holdout_feature)
         NF.eval()
         return NF
