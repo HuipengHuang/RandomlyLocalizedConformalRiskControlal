@@ -46,6 +46,8 @@ parser.add_argument("--latent_dim", type=int, default=None)
 parser.add_argument("--mlp", default=None, choices=["True", "False"])
 parser.add_argument("--output_dim", type=int, default=None)
 
+parser.add_argument("--nf", type=str, default=None)
+
 parser.add_argument("--h", type=float, default=None)
 parser.add_argument("--efficient_calibration_size", default=None, type=int)
 parser.add_argument("--adaptive", type=str, default="False", choices=["True", "False"])

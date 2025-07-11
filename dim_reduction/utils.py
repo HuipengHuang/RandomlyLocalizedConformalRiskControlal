@@ -1,7 +1,7 @@
 from .MLP import DiversifyingMLP
 from .PCA.utils import get_pca
 from .VAE.utils import get_vae
-
+from .nf import NormalizingFlow
 def get_dimension_reduction_tool(args, holdout_feature, holdout_target):
     if args.pca:
         PCA = get_pca(args, holdout_feature)
@@ -20,3 +20,9 @@ def get_dimension_reduction_tool(args, holdout_feature, holdout_target):
         MLP.fit(holdout_feature, holdout_target)
         MLP.eval()
         return MLP
+
+    if args.nf == "True":
+        NF = NormalizingFlow(input_dim=holdout_feature.shape[1],)
+        NF.fit(holdout_feature)
+        NF.eval()
+        return NF
